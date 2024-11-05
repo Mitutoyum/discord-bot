@@ -99,5 +99,4 @@ class Admin(Cog):
     @commands.command(description='Sync slash commands, You should only use this when a slash command changes, DO NOT spam it')
     async def sync(self, ctx: Context, guild_id: int | None = None) -> None:
         synced_cmds = await self.bot.tree.sync(guild=guild_id)
-        self.bot.tree.copy_global_to
         await MessageUtils(ctx).reply(content=f'Synced {len(synced_cmds)} command(s)')
