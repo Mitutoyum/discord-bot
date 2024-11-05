@@ -17,9 +17,10 @@ python main.py run
 <details>
   <summary><h3>Dependencies</h3></summary>
 
-- `git`
-- `curl`
-- `php`
+- `discord.py`
+- `aiosqlite`
+- `typer`
+- `python-dotenv`
 
 > All the dependencies will be installed automatically when you run **Zphisher** for the first time.
 </details>
