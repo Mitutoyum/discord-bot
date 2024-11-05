@@ -1,4 +1,0 @@
-discord.py
-typer
-python-dotenv
-aiosqlite

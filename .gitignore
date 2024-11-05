@@ -1,8 +1,0 @@
-__pycache__/
-.vscode/
-.venv/
-
-*.log
-.env
-config.json
-database.db
