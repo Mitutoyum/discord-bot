@@ -21,8 +21,6 @@ python main.py run
 - `aiosqlite`
 - `typer`
 - `python-dotenv`
-
-> All the dependencies will be installed automatically when you run **Zphisher** for the first time.
 </details>
 
 
