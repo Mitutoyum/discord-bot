@@ -15,7 +15,7 @@ class Admin(Cog):
     set_flag = app_commands.Group(name='set', description='Set')
     config_group.add_command(set_flag)
 
-    for flag, metadata in config.flags.items():
+    for flag, metadata in config.flags.items(): # i know this is cursed
         async def command(self, inter: Interaction, scope, **kwargs):
             flags = config.flags
             flag_name = inter.command.name
@@ -33,7 +33,6 @@ class Admin(Cog):
                 await flag['callback'](inter, **kwargs)
             path = f'servers.{inter.guild_id}.{flag_name}' if scope == 'local' else f'global.{flag_name}'
             kwargs = kwargs.get('value') or kwargs.get(flag_name) or kwargs
-            # config.set_flag(path, (kwargs['value'] or kwargs['value']) if not isinstance(flag['value'], dict) else kwargs)
             config.set_flag(path, kwargs)
             await MessageUtils(inter).reply(content=f'```Successfully changed {flag_name}```')
         
