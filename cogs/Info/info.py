@@ -69,3 +69,7 @@ class Info(Cog):
             cmds.append(app_commands.Choice(name=cmd.qualified_name, value=cmd.qualified_name))
         
         return cmds
+    
+    @app_commands.command(description='Show the bot\'s latency')
+    async def ping(self, interaction: Interaction):
+        await MessageUtils(interaction).reply(content=f'```Bot\'s latency: {round(self.bot.latency * 1000)}ms```')

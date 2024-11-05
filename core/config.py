@@ -11,9 +11,8 @@ config_path = Path(__file__).parents[1] / 'config.json'
 database_path = Path(__file__).parents[1] / 'database.db'
 
 def get_config() -> dict:
-    with open(file=config_path, mode='r+', encoding='utf-8') as file:
+    with open(config_path, 'r', encoding='utf-8') as file:
         bot_config = json.load(file)
-        file.close()
     return bot_config
 
 def get_flag(path: str, default = None, *, check_global: bool = True, add_if_not_exist: bool = True):
@@ -62,23 +61,12 @@ def add_flag(flag: str, value: dict | Any, *, scope: Literal['global', 'local', 
 
     return decorator
 
-if status := get_flag('global.status'):
-    status = discord.Status[status]
-else:
-    status = None
-
-if activity := get_flag('global.activity'):
-    activity_type = discord.ActivityType[activity['type']]
-    activity.pop('type')
-    activity = discord.Activity(type=activity_type, **activity)
-else:
-    activity = None
 
 flags = {}
 
 add_flag('prefix', '!', description='The prefix for the bot to use')
 add_flag('default_color', 5793266, description='The color for the bot to use (mainly for embeds)')
-add_flag('use_embed', False, description='Wether if the bot should use embed when sending message or not')
+add_flag('use_embed', False, scope='global', description='Wether if the bot should use embed when sending message or not')
 add_flag('mention_prefix', False, description='Use the bot\'s mention as the prefix, this does not override the current prefix')
 
 @add_flag('activity', {

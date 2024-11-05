@@ -1,13 +1,10 @@
-import discord
-
 from .. import Cog
 
-from core import utils, embeds, config, errors, views
+from core import utils, embeds, config, errors
 from typing import Literal
 from core.utils import MessageUtils
 from discord.ext import commands
 from discord import app_commands
-from discord.ext.commands import Context
 from discord import Interaction
 
 class Admin(Cog):
@@ -87,16 +84,3 @@ class Admin(Cog):
             value = '\n'.join([
                 f'`{i}`: {config.get_flag(f'servers.{inter.guild.id}.{flag.name}' if i == 'local' else f'global.{flag.name}', 'Not set', check_global=False, add_if_not_exist=False)}' for i in scope]), inline=False)
         await MessageUtils(inter, use_embed_check=False).reply(embed=embed)
-    
-    @commands.is_owner()
-    @commands.command(description='Clears all application commands from the tree')
-    async def clear_commands(self, ctx: Context, guild_id: int | None = None) -> None:
-        guild = discord.Object(guild_id) if guild_id else None
-        self.bot.tree.clear_commands(guild=guild)
-        await MessageUtils(ctx).reply(content='Successfully cleared all application commands')
-
-    @commands.is_owner()
-    @commands.command(description='Sync slash commands, You should only use this when a slash command changes, DO NOT spam it')
-    async def sync(self, ctx: Context, guild_id: int | None = None) -> None:
-        synced_cmds = await self.bot.tree.sync(guild=self.bot.get_guild(guild_id))
-        await MessageUtils(ctx).reply(content=f'Synced {len(synced_cmds)} command(s)')

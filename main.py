@@ -50,18 +50,31 @@ def setup():
 
 @app.command()
 def run():
+
+    if status := config.get_flag('global.status'):
+        status = discord.Status[status]
+    else:
+        status = None
+
+    if activity := config.get_flag('global.activity'):
+        activity_type = discord.ActivityType[activity['type']]
+        activity.pop('type')
+        activity = discord.Activity(type=activity_type, **activity)
+    else:
+        activity = None
+
     bot = Bot(
         command_prefix=utils.get_prefix,
         intents=config.intents,
         tree_cls=Tree,
         help_command=None,
-        activity=config.activity,
-        status=config.status
+        activity=activity,
+        status=status
     )
 
     logger.info('Starting bot.')
-
     load_dotenv()
+
     bot.run(getenv('BOT_TOKEN'), log_handler=None)
     asyncio.run(database.close_all())
 
