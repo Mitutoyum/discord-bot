@@ -20,7 +20,7 @@ class Moderation(Cog):
 
     async def cog_load(self):
         await super().cog_load()
-        self.tempban_check.start()
+        # self.tempban_check.start()
 
     @app_commands.describe(
         user = 'The user to ban',

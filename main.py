@@ -23,12 +23,6 @@ app = typer.Typer(no_args_is_help=True, add_completion=False)
 
 @app.command()
 def setup():
-    if not config.config_path.is_file():
-        config.config_path.write_text('{}')
-        logger.info('Initialized config')
-    if not config.database_path.is_file():
-        database.init()
-
     suffix = '\n>'
     prefix = typer.prompt(
         text = '\nWhat prefix do you want to use?',
@@ -50,6 +44,8 @@ def setup():
 
 @app.command()
 def run():
+    config.init()
+    database.init()
 
     if status := config.get_flag('global.status'):
         status = discord.Status[status]
@@ -76,7 +72,7 @@ def run():
     load_dotenv()
 
     bot.run(getenv('BOT_TOKEN'), log_handler=None)
-    asyncio.run(database.close_all())
+    asyncio.run(bot.connection_pool.close())
 
 
 

@@ -1,22 +1,25 @@
+import discord
 import logging
 
 from discord.ext import commands
-from core import config, utils
+from core import config, utils, database
 
 logger = logging.getLogger(__name__)
 
 class Bot(commands.Bot):
 
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
         self.tree.bot = self
+        self.connection_pool = database.ConnectionPool()
+        super().__init__(*args, **kwargs)
+
 
     async def setup_hook(self) -> None:
         for cog in config.cogs_dir.iterdir():
             if cog.name.startswith('_'):
                 continue
             await self.load_extension(f'cogs.{cog.stem}')
-                
+        
     async def on_ready(self) -> None:
         logger.info('Bot is ready')
 

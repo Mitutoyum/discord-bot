@@ -10,6 +10,10 @@ cogs_dir = Path(__file__).parents[1] / 'cogs'
 config_path = Path(__file__).parents[1] / 'config.json'
 database_path = Path(__file__).parents[1] / 'database.db'
 
+def init():
+    if not config_path.is_file():
+        config_path.write_text('{}')
+
 def get_config() -> dict:
     with open(config_path, 'r', encoding='utf-8') as file:
         bot_config = json.load(file)
