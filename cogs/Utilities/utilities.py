@@ -11,9 +11,4 @@ class Utilities(Cog):
 
     @commands.command()
     async def test(self, interaction: Interaction):
-        db = await self.bot.connection_pool.acquire()
-        print(db)
-        await db.close()
-        # async with self.bot.connection_pool.acquire() as db:
-        #     print('e')
-        print(self.bot.connection_pool.pool.qsize())
+        pass

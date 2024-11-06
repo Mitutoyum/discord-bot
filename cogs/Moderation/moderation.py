@@ -20,7 +20,7 @@ class Moderation(Cog):
 
     async def cog_load(self):
         await super().cog_load()
-        # self.tempban_check.start()
+        self.tempban_check.start()
 
     @app_commands.describe(
         user = 'The user to ban',
@@ -44,7 +44,7 @@ class Moderation(Cog):
             )
             if duration:
                     duration = datetime.now() + duration
-                    async with await database.get_connection() as db:
+                    async with self.bot.connection_pool.acquire() as db:
                         await db.execute(f'INSERT INTO temp_bans(userid, guild_id, release_date) VALUES(?, ?, ?)', (user.id, interaction.guild_id, duration.isoformat()))
                         await db.commit()
                     duration = discord.utils.format_dt(duration, 'R')
@@ -64,7 +64,7 @@ class Moderation(Cog):
     async def unban(self, interaction: Interaction, user: discord.User, reason: Optional[str] = None) -> None:
         message_utils = MessageUtils(interaction)
         await interaction.guild.unban(user, reason=reason)
-        async with await database.get_connection() as db:
+        async with self.bot.connection_pool.acquire() as db:
             async with db.execute('SELECT EXISTS(SELECT * FROM temp_bans WHERE userid=? AND guild_id=?)', (user.id, interaction.guild_id)) as cursor:
                 (result) = await cursor.fetchone()
                 if result:
@@ -88,7 +88,7 @@ class Moderation(Cog):
     @tasks.loop(seconds=1)
     async def tempban_check(self):
         now = datetime.now()
-        async with await database.get_connection() as db:
+        async with self.bot.connection_pool.acquire() as db:
             async with db.execute('SELECT rowid, * FROM temp_bans') as cursor:
                 async for record in cursor:
                     (rowid, userid, guild_id, release_date) = record
