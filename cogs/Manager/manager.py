@@ -3,7 +3,7 @@ from .. import Cog
 from discord import Member, Role
 from discord import app_commands
 from discord import Interaction
-from core.utils import MessageUtils
+from core.utils.helpers import MessageUtils
 
 from typing import Optional
 

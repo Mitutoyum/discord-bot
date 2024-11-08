@@ -3,12 +3,15 @@ from .. import Cog
 from discord import Interaction
 from discord import app_commands
 from discord.ext import commands
-from core.utils import MessageUtils
 from discord.ext.commands import Context
+from core.utils.helpers import MessageUtils
+
+
 
 
 class Utilities(Cog):
 
-    @commands.command()
+    @app_commands.command()
     async def test(self, interaction: Interaction):
-        pass
+        print(interaction.response)
+        await interaction.message.reply('lol')

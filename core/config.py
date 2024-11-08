@@ -92,6 +92,6 @@ async def set_activity(inter: Interaction, **kwargs):
         'annotation': Literal['online', 'offline', 'dnd', 'idle']
     }
 }, scope='global', description='Set bot\'s status')
-async def set_status(inter: Interaction, status):
-    status = discord.Status[status]
+async def set_status(inter: Interaction, **kwargs):
+    status = discord.Status[kwargs['value']]
     await inter.client.change_presence(status=status)

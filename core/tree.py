@@ -1,20 +1,20 @@
 import discord
 
-from core import utils, errors
+from .utils.helpers import error_handler
 from discord import Interaction
 from discord.ext import commands
 from discord.app_commands import CommandTree
 from discord.app_commands import AppCommandError
 
 from discord import app_commands
-from core.bot import Bot
+from .bot import Bot
 
 
 class Tree(CommandTree):
     bot: Bot = None
 
     async def on_error(self, interaction: Interaction, error: AppCommandError):
-        if not await utils.error_handler(interaction, error):
+        if not await error_handler(interaction, error):
             await super().on_error(interaction, error)
 
     async def get_mention(self, command: str | commands.HybridCommand | app_commands.Command | commands.Command, *, guild: discord.abc.Snowflake | None = None) -> str | None:

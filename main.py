@@ -4,10 +4,12 @@ import discord
 from core.bot import Bot
 from core.tree import Tree
 from dotenv import load_dotenv
-from core import utils, config, database
+from core import database, config
+from core.utils.helpers import get_prefix
 
 import logging
 import asyncio
+
 from os import getenv
 from typing import Annotated
 
@@ -49,18 +51,18 @@ def run():
 
     if status := config.get_flag('global.status'):
         status = discord.Status[status]
-    else:
-        status = None
+    # else:
+    #     status = None
 
     if activity := config.get_flag('global.activity'):
         activity_type = discord.ActivityType[activity['type']]
         activity.pop('type')
         activity = discord.Activity(type=activity_type, **activity)
-    else:
-        activity = None
+    # else:
+    #     activity = None
 
     bot = Bot(
-        command_prefix=utils.get_prefix,
+        command_prefix=get_prefix,
         intents=config.intents,
         tree_cls=Tree,
         help_command=None,

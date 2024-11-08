@@ -1,8 +1,10 @@
 from .. import Cog
-
-from core import utils, embeds, config, errors
 from typing import Literal
-from core.utils import MessageUtils
+
+
+from core import config, errors
+from core.utils import helpers, embeds
+from core.utils.helpers import MessageUtils
 from discord.ext import commands
 from discord import app_commands
 from discord import Interaction
@@ -21,7 +23,7 @@ class Admin(Cog):
             if scope == 'local':
                 if not inter.guild:
                     raise errors.GuildOnly('Local scope can only be used in guilds')
-                if not utils.is_server_owner(inter):
+                if not helpers.is_server_owner(inter):
                     raise errors.NotServerOwner
             elif scope == 'global' and not await self.bot.is_owner(inter.user):
                 raise commands.NotOwner
@@ -82,5 +84,6 @@ class Admin(Cog):
         embed.add_field(
             name = '> Current values',
             value = '\n'.join([
-                f'`{i}`: {config.get_flag(f'servers.{inter.guild.id}.{flag.name}' if i == 'local' else f'global.{flag.name}', 'Not set', check_global=False, add_if_not_exist=False)}' for i in scope]), inline=False)
+                f'`{i}`: {config.get_flag(f'servers.{inter.guild.id}.{flag.name}' if i == 'local' else f'global.{flag.name}', 'Not set', check_global=False, add_if_not_exist=False)}' for i in scope]), inline=False
+            )
         await MessageUtils(inter, use_embed_check=False).reply(embed=embed)

@@ -1,12 +1,14 @@
 from .. import Cog
+from typing import Optional
 
-from core import utils, config, embeds, views
-from core.utils import MessageUtils
 from discord import app_commands
+from discord.ext import commands
 from discord import Interaction
 from discord.ext.commands import Context
-from discord.ext import commands
-from typing import Optional
+
+from core import config
+from core.utils import helpers, embeds, views
+from core.utils.helpers import MessageUtils
 
 from inspect import _empty as empty
 
@@ -23,7 +25,6 @@ class Info(Cog):
             embed.description = f'```Select a category to begin```\nServer\'s prefix: `{prefix}`'
             embed.add_field(
                 name='> About the bot',
-                # value=f'- Github: [github.com](https://github.com/)'
                 value=f'- {self.bot.user.name} is a open source multi-functional bot, see more at [github](https://github.com/)'
             )
             view = views.BaseView(inter.user)
@@ -39,7 +40,7 @@ class Info(Cog):
                 f'<{name}>'
                 if properties['default'] is empty else
                 f'[{name}]'
-                for name, properties in utils.get_flags(command.callback).items()
+                for name, properties in helpers.get_flags(command.callback).items()
             ])
 
             if isinstance(command, commands.Group):

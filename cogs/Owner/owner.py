@@ -3,7 +3,7 @@ from .. import Cog
 from discord import Interaction
 from discord import app_commands
 from discord.ext import commands
-from core.utils import MessageUtils
+from core.utils.helpers import MessageUtils
 from typing import Optional
 
 class Owner(Cog, description='Owner-only category'):

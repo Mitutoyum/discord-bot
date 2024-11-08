@@ -2,16 +2,17 @@ import discord
 import logging
 
 from discord.ext import commands
-from core import config, utils, database
+from core import config, database
+from core.utils.helpers import error_handler
 
 logger = logging.getLogger(__name__)
 
 class Bot(commands.Bot):
 
     def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.tree.bot = self
         self.connection_pool = database.ConnectionPool()
-        super().__init__(*args, **kwargs)
 
 
     async def setup_hook(self) -> None:
@@ -24,5 +25,5 @@ class Bot(commands.Bot):
         logger.info('Bot is ready')
 
     async def on_command_error(self, ctx: commands.Context, exception: commands.CommandError):
-        if not await utils.error_handler(ctx, exception):
+        if not await error_handler(ctx, exception):
             await super().on_command_error(ctx, exception)
