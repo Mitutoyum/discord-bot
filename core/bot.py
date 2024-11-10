@@ -17,7 +17,7 @@ class Bot(commands.Bot):
 
     async def setup_hook(self) -> None:
         for cog in config.cogs_dir.iterdir():
-            if cog.name.startswith('_'):
+            if cog.name.startswith('_') or cog.name.startswith('.'):
                 continue
             await self.load_extension(f'cogs.{cog.stem}')
         

@@ -51,15 +51,11 @@ def run():
 
     if status := config.get_flag('global.status'):
         status = discord.Status[status]
-    # else:
-    #     status = None
 
     if activity := config.get_flag('global.activity'):
         activity_type = discord.ActivityType[activity['type']]
         activity.pop('type')
         activity = discord.Activity(type=activity_type, **activity)
-    # else:
-    #     activity = None
 
     bot = Bot(
         command_prefix=get_prefix,

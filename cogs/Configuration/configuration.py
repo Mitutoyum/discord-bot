@@ -1,42 +1,49 @@
 from .. import Cog
-from typing import Literal
 
-
+from discord import app_commands, Interaction
+from discord.ext import commands
 from core import config, errors
 from core.utils import helpers, embeds
 from core.utils.helpers import MessageUtils
-from discord.ext import commands
-from discord import app_commands
-from discord import Interaction
+from typing import Literal
 
-class Admin(Cog):
-    config_group = app_commands.Group(name='config', description='A set of commands to configure the bot')
-    set_flag = app_commands.Group(name='set', description='Set')
+class Configuration(Cog, description='A category specifically for bot\'s configuration'):
+    
+    config_group = app_commands.Group(
+        name = 'config',
+        description='A group with loads of command to modify the bot\'s behavior'
+    )
+    set_flag = app_commands.Group(
+        name = 'set',
+        description = 'A subgroup contains all of the flags that you can set' # todo
+    )
     config_group.add_command(set_flag)
 
+
+
     for flag, metadata in config.flags.items(): # i know this is cursed
-        async def command(self, inter: Interaction, scope, **kwargs):
-            flags = config.flags
-            flag_name = inter.command.name
-            flag = flags[flag_name]
+        async def command(self, interaction: Interaction, scope, **kwargs):
+            flag_name = interaction.command.name
+            flag = config.flags[flag_name]
 
             if scope == 'local':
-                if not inter.guild:
+                if not interaction.guild:
                     raise errors.GuildOnly('Local scope can only be used in guilds')
-                if not helpers.is_server_owner(inter):
+                if not helpers.is_server_owner(interaction):
                     raise errors.NotServerOwner
-            elif scope == 'global' and not await self.bot.is_owner(inter.user):
+            elif scope == 'global' and not await self.bot.is_owner(interaction.user):
                 raise commands.NotOwner
             
             if flag.get('callback'):
-                await flag['callback'](inter, **kwargs)
-            path = f'servers.{inter.guild_id}.{flag_name}' if scope == 'local' else f'global.{flag_name}'
+                await flag['callback'](interaction, **kwargs)
+
+            path = f'servers.{interaction.guild_id}.{flag_name}' if scope == 'local' else f'global.{flag_name}'
             kwargs = kwargs.get('value') or kwargs.get(flag_name) or kwargs
+
             config.set_flag(path, kwargs)
-            await MessageUtils(inter).reply(content=f'```Successfully changed {flag_name}```')
+            await MessageUtils(interaction).reply(content=f'```Successfully changed {flag_name}```')
         
         old_code = command.__code__
-        
         params = list(old_code.co_varnames)
         params.remove('kwargs')
         argcount = len(params[:command.__code__.co_argcount])
@@ -55,12 +62,12 @@ class Admin(Cog):
             command.__defaults__ = (command.__defaults__ or ()) + (metadata['value'],)
             argcount += 1
 
-        command.__code__ = command.__code__.replace(co_argcount=argcount, co_flags=131, co_varnames=tuple(params), co_nlocals=len(params))
+        command.__code__ = command.__code__.replace(co_name=flag, co_argcount=argcount, co_flags=131, co_varnames=tuple(params), co_nlocals=len(params))
         command.__annotations__['scope'] = Literal['global', 'local'] if metadata.get('scope') == 'hybrid' else Literal[metadata.get('scope')]
         set_flag.command(name=flag, description=metadata['description'])(command)
         command.__code__ = old_code
 
-
+    
     @app_commands.choices(
         flag = [
             app_commands.Choice(name=i, value=i)
@@ -68,13 +75,13 @@ class Admin(Cog):
         ]
     )
     @config_group.command(name='get', description='Get information about a flag')
-    async def get_flag(self, inter: Interaction, flag: app_commands.Choice[str]):
+    async def get_flag(self, interaction: Interaction, flag: app_commands.Choice[str]):
         metadata = config.flags[flag.name]
         if (scope := metadata['scope']) == 'hybrid':
             scope = ['global', 'local']
         else:
             scope = list(scope)
-        embed = embeds.BaseEmbed(inter.user)
+        embed = embeds.BaseEmbed(interaction.user)
         embed.title = f'Showing flag: `{flag.name}`'
         embed.description = f'```{metadata.get('description')}```'
         embed.add_field(
@@ -84,6 +91,6 @@ class Admin(Cog):
         embed.add_field(
             name = '> Current values',
             value = '\n'.join([
-                f'`{i}`: {config.get_flag(f'servers.{inter.guild.id}.{flag.name}' if i == 'local' else f'global.{flag.name}', 'Not set', check_global=False, add_if_not_exist=False)}' for i in scope]), inline=False
+                f'`{i}`: {config.get_flag(f'servers.{interaction.guild.id}.{flag.name}' if i == 'local' else f'global.{flag.name}', 'Not set', check_global=False, add_if_not_exist=False)}' for i in scope]), inline=False
             )
-        await MessageUtils(inter, use_embed_check=False).reply(embed=embed)
+        await MessageUtils(interaction, use_embed_check=False).reply(embed=embed)

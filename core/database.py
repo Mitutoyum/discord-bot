@@ -7,7 +7,9 @@ from aiosqlite import Connection
 from typing import Optional, Self
 
 tables = {
-    'temp_bans': '(userid INTEGER, guild_id INTEGER, release_date TEXT)'
+    'temp_bans': '(userid INTEGER, guild_id INTEGER, release_date TEXT)',
+    'temp_mutes': '(userid INTEGER, guild_id INTEGER, release_date TEXT)',
+    'warns': '(userid INTEGER, guild_id INTEGER, reason TEXT)'
 }
 
 

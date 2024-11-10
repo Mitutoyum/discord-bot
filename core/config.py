@@ -70,7 +70,7 @@ flags = {}
 
 add_flag('prefix', '!', description='The prefix for the bot to use')
 add_flag('default_color', 5793266, description='The color for the bot to use (mainly for embeds)')
-add_flag('use_embed', False, scope='global', description='Wether if the bot should use embed when sending message or not')
+add_flag('use_embed', False, description='Wether if the bot should use embed when sending message or not')
 add_flag('mention_prefix', False, description='Use the bot\'s mention as the prefix, this does not override the current prefix')
 
 @add_flag('activity', {
