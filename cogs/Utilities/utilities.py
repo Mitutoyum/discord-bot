@@ -13,5 +13,4 @@ class Utilities(Cog):
 
     @app_commands.command()
     async def test(self, interaction: Interaction):
-        print(interaction.response)
-        await interaction.message.reply('lol')
+        await MessageUtils(interaction).reply(f'**{'llllllll'} has been muted**\n>>> Moderator: {interaction.user.mention}\nDuration: {'e'}\nReason: {'l' or 'No reason provided'}')

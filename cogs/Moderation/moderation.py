@@ -106,19 +106,37 @@ class Moderation(Cog):
             duration = discord.utils.format_dt(duration, style='R')
         else:
             duration = '`Permanent`'
-        await MessageUtils(interaction).reply(content=f'**{member.mention} has been muted**\n>>> Moderator: {interaction.user.mention}\nDuration: {duration}\nReason: {reason or 'No reason provided'}')
+        await MessageUtils(interaction).reply(f'**{member.mention} has been muted**\n>>> Moderator: {interaction.user.mention}\nDuration: {duration}\nReason: {reason or 'No reason provided'}')
 
     @app_commands.checks.has_permissions(mute_members=True)
     @app_commands.guild_only()
     @app_commands.command(description='Unmute member')
     async def unmute(self, interaction: Interaction, member: Member, reason: Optional[str] = None):
-        pass # todo
+        muted_role = discord.utils.get(interaction.guild.roles, name='Muted')
+        if not discord.utils.get(member.roles, id=muted_role.id):
+            return await MessageUtils(interaction).reply(f'{member.mention} is not muted')
+        
+        await member.remove_roles(muted_role, reason=reason)
+
+        async with self.bot.connection_pool.acquire() as connection:
+            async with connection.execute('SELECT EXISTS(SELECT * FROM temp_mutes WHERE userid=? AND guild_id=?)', (member.id, interaction.guild_id)) as cursor:
+                (result) = await cursor.fetchone()
+                if result:
+                    await connection.execute('DELETE FROM temp_mutes WHERE userid=? AND guild_id=?', (member.id, interaction.guild_id))
+                    await connection.commit()
+
+        await MessageUtils(interaction).reply(f'**{member.mention} has been unmuted**\n>>> Moderator: {interaction.user.mention}\nReason: {reason or 'No reason provided'}')
+        
+
+
+
+        
 
     @app_commands.checks.has_permissions(moderate_members=True)
     @app_commands.guild_only()
     @app_commands.command(description='Timeout member')
     async def timeout(self, interaction, member: Member):
-        pass # todo
+        pass
     
     @app_commands.checks.has_permissions(manage_roles=True, manage_channels=True)
     @app_commands.guild_only()
@@ -171,8 +189,9 @@ class Moderation(Cog):
                             await user.remove_roles(discord.utils.get(user.roles, name='Muted'))
                             await db.execute(f'DELETE FROM temp_mutes WHERE rowid={rowid}')
                             await db.commit()
-                    except AttributeError: # Bot no longer exists in the server
-                        await db.execute('DELETE FROM temp_mutes WHERE guild_id=?', tuple(guild_id))
+                    
+                    except AttributeError:
+                        await db.execute('DELETE FROM temp_mutes WHERE rowid=?', tuple(rowid))
 
     @temp_bans.before_loop
     async def tb_before_loop(self):

@@ -7,6 +7,9 @@ from core import config
 from . import helpers, embeds
 from discord import ui
 
+a = []
+
+
 class BaseView(ui.View):
     message: discord.Message
     def __init__(self, author: discord.User | discord.Member, timeout: Optional[float] = 180, ephemeral: bool = False) -> None:

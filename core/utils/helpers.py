@@ -17,27 +17,31 @@ logger = getLogger(__name__)
 
 class MessageUtils():
     def __init__(self, cls: Optional[Context | Interaction] = None, use_embed_check: Optional[bool] = True):
+        assert isinstance(cls, (Context, Interaction))
+
         self.cls = cls
         self.use_embed = False
-
-        assert isinstance(cls, (Context, Interaction))
 
         if use_embed_check:
             path = f'servers.{cls.guild.id}.use_embed' if cls.guild else 'global.use_embed'
             self.use_embed = config.get_flag(path, self.use_embed)
 
-
-    # @overload
-    async def reply(self, **kwargs) -> discord.Message | None:
+    async def reply(self, *args, **kwargs) -> discord.Message | None:
         cls = self.cls
-
+        content = None
+        if args:
+            content = args[0]
+        else:
+            content = kwargs.get('content')
+        
         author = getattr(cls, 'user', None) or cls.author
         send_func = getattr(cls, 'reply', None) or cls.response.send_message
-        if self.use_embed and 'content' in kwargs:
-            embed = embeds.BaseEmbed(author, description=kwargs.get('content'))
-            kwargs.pop('content')
+
+        if self.use_embed and not kwargs.get('embed') and content:
+            embed = embeds.BaseEmbed(author, description=content)
+            kwargs.pop('content', None)
             return await send_func(embed=embed, **kwargs)
-        return await send_func(**kwargs)
+        return await send_func(*args, **kwargs)
     
     async def edit(self, message: Message, **kwargs):
         if self.use_embed and 'content' in kwargs:
