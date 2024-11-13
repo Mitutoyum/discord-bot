@@ -1,24 +1,21 @@
 from .. import Cog
 from typing import Optional
 
-from discord import app_commands
+from discord import app_commands, Interaction
 from discord.ext import commands
-from discord import Interaction
-from discord.ext.commands import Context
 
-from core import config
-from core.utils import helpers, embeds, views
-from core.utils.helpers import MessageUtils
+from core.utils import config_manager, helpers, embeds, views
+from core.utils.message import Messenger
 
 from inspect import _empty as empty
 
-class Info(Cog):
+class Information(Cog):
 
     @app_commands.command(description='Shows help')
-    async def help(self, inter: Interaction, command: Optional[str] = None):
-        embed = embeds.BaseEmbed(inter.user)
-        message_utils = MessageUtils(inter, use_embed_check=False)
-        prefix = config.get_flag(f'servers.{inter.guild_id}.prefix', None)
+    async def help(self, interaction: Interaction, command: Optional[str] = None):
+        embed = embeds.BaseEmbed(interaction.user)
+        message_utils = Messenger(interaction, use_embed_check=False)
+        prefix = config_manager.get_flag(f'servers.{interaction.guild_id}.prefix', None)
 
         if not command:
             embed.title = 'Help Center'
@@ -27,7 +24,7 @@ class Info(Cog):
                 name='> About the bot',
                 value=f'- {self.bot.user.name} is a open source multi-functional bot, see more at [github](https://github.com/)'
             )
-            view = views.BaseView(inter.user)
+            view = views.BaseView(interaction.user)
             view.add_item(views.HelpCategorySelect(self.bot))
             await message_utils.reply(embed=embed, view=view)
 
@@ -40,7 +37,7 @@ class Info(Cog):
                 f'<{name}>'
                 if properties['default'] is empty else
                 f'[{name}]'
-                for name, properties in helpers.get_flags(command.callback).items()
+                for name, properties in helpers.get_params(command.callback).items()
             ])
 
             if isinstance(command, commands.Group):
@@ -59,18 +56,7 @@ class Info(Cog):
             embed.add_field(name='> Usage', value=flags)
             await message_utils.reply(embed=embed)
 
-
-    @help.autocomplete('command')
-    async def help_autocompletion(self, inter: Interaction, current: str):
-        cmds = []
-        for cmd in self.bot.walk_commands():
-            cmds.append(app_commands.Choice(name=cmd.qualified_name, value=cmd.qualified_name))
-        
-        for cmd in self.bot.tree.walk_commands():
-            cmds.append(app_commands.Choice(name=cmd.qualified_name, value=cmd.qualified_name))
-        
-        return cmds
     
     @app_commands.command(description='Show the bot\'s latency')
     async def ping(self, interaction: Interaction):
-        await MessageUtils(interaction).reply(content=f'```Bot\'s latency: {round(self.bot.latency * 1000)}ms```')
+        await Messenger(interaction).reply(f'Bot\'s latency: {round(self.bot.latency * 1000)}ms')

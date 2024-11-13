@@ -5,6 +5,7 @@ from core.bot import Bot
 from core.tree import Tree
 from dotenv import load_dotenv
 from core import database, config
+from core.utils import config_manager
 from core.utils.helpers import get_prefix
 
 import logging
@@ -37,7 +38,7 @@ def setup():
         hide_input = True,
         prompt_suffix = suffix
     )
-    config.set_flag('global.prefix', prefix)
+    config_manager.set_flag('global.prefix', prefix)
 
     with open('.env', 'w', encoding='utf-8') as file:
         file.write(f'BOT_TOKEN={bot_token}')
@@ -49,10 +50,10 @@ def run():
     config.init()
     database.init()
 
-    if status := config.get_flag('global.status'):
+    if status := config_manager.get_flag('global.status'):
         status = discord.Status[status]
 
-    if activity := config.get_flag('global.activity'):
+    if activity := config_manager.get_flag('global.activity'):
         activity_type = discord.ActivityType[activity['type']]
         activity.pop('type')
         activity = discord.Activity(type=activity_type, **activity)

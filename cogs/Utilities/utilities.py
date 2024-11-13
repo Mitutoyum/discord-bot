@@ -4,13 +4,11 @@ from discord import Interaction
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
-from core.utils.helpers import MessageUtils
-
-
-
+from core.utils.message import Messenger
 
 class Utilities(Cog):
 
-    @app_commands.command()
-    async def test(self, interaction: Interaction):
-        await MessageUtils(interaction).reply(f'**{'llllllll'} has been muted**\n>>> Moderator: {interaction.user.mention}\nDuration: {'e'}\nReason: {'l' or 'No reason provided'}')
+    @commands.command()
+    async def test(self, ctx: Context):
+        a = ctx.guild.audit_logs(limit=1)
+        print((await a.__anext__()).user)

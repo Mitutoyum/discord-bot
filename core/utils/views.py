@@ -3,8 +3,8 @@ import discord
 from discord.ext import commands
 from discord import ButtonStyle, app_commands
 from typing import Optional
-from core import config
-from . import helpers, embeds
+
+from . import helpers, embeds, config_manager
 from discord import ui
 
 a = []
@@ -58,7 +58,7 @@ class HelpCategorySelect(ui.Select):
 
         for command in cog.walk_commands():
             if isinstance(command, commands.Group): continue
-            prefix = config.get_flag(f'servers.{interaction.guild_id}.prefix')
+            prefix = config_manager.get_flag(f'servers.{interaction.guild_id}.prefix')
             description = command.description or command.help
             
             
@@ -72,5 +72,5 @@ class HelpCategorySelect(ui.Select):
                 value=command.description,
                 inline=False
             )
- 
+        print(embed)
         await interaction.response.edit_message(embed=embed)

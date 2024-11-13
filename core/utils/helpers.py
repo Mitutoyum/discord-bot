@@ -9,61 +9,28 @@ from discord.ext import commands
 from discord import app_commands
 from discord.ext.commands import Context
 from discord import Interaction, Message
-from core import config, errors
-from . import views, embeds
-from typing import Optional
+
+from core import errors
+
+from . import views, embeds, config_manager
+from .message import Messenger
 
 logger = getLogger(__name__)
 
-class MessageUtils():
-    def __init__(self, cls: Optional[Context | Interaction] = None, use_embed_check: Optional[bool] = True):
-        assert isinstance(cls, (Context, Interaction))
-
-        self.cls = cls
-        self.use_embed = False
-
-        if use_embed_check:
-            path = f'servers.{cls.guild.id}.use_embed' if cls.guild else 'global.use_embed'
-            self.use_embed = config.get_flag(path, self.use_embed)
-
-    async def reply(self, *args, **kwargs) -> discord.Message | None:
-        cls = self.cls
-        content = None
-        if args:
-            content = args[0]
-        else:
-            content = kwargs.get('content')
-        
-        author = getattr(cls, 'user', None) or cls.author
-        send_func = getattr(cls, 'reply', None) or cls.response.send_message
-
-        if self.use_embed and not kwargs.get('embed') and content:
-            embed = embeds.BaseEmbed(author, description=content)
-            kwargs.pop('content', None)
-            return await send_func(embed=embed, **kwargs)
-        return await send_func(*args, **kwargs)
-    
-    async def edit(self, message: Message, **kwargs):
-        if self.use_embed and 'content' in kwargs:
-            embed = embeds.BaseEmbed(description=kwargs.get('content'))
-            kwargs.pop('content')
-            return await message.edit(embed=embed, **kwargs)
-        return await message.edit(**kwargs)
-    
 async def error_handler(cls: Context | Interaction, exception: commands.CommandError | app_commands.AppCommandError | errors.BotException | Exception) -> bool:
     if isinstance(exception, (commands.CommandInvokeError, app_commands.CommandInvokeError)):
         exception = exception.__cause__
 
     if exception.args:
-        await MessageUtils(cls).reply(content=exception.args[0])
+        await Messenger(cls).reply(content=exception.args[0])
         return True
     return False
     
 
     
 async def get_prefix(bot: commands.Bot, message: discord.Message) -> str | abc.Iterable[str]:
-    mention_prefix = config.get_flag('global.mention_prefix' if not message.guild else f'servers.{message.guild.id}.mention_prefix', False)
-    prefix = config.get_flag('global.prefix' if not message.guild else f'servers.{message.guild.id}.prefix')
+    mention_prefix = config_manager.get_flag('global.mention_prefix' if not message.guild else f'servers.{message.guild.id}.mention_prefix', False)
+    prefix = config_manager.get_flag('global.prefix' if not message.guild else f'servers.{message.guild.id}.prefix')
     return commands.when_mentioned_or(prefix)(bot, message) if mention_prefix and prefix else prefix or commands.when_mentioned(bot, message)
     
 
@@ -111,7 +78,7 @@ def is_typing_optional(annotation) -> bool:
 async def confirm_prompt(cls: Context | Interaction, use_embed_check: bool = True, timeout: float = float('inf')):
     author = getattr(cls, 'author', None) or getattr(cls, 'user', None)
     view = views.ConfirmPrompt(author, timeout=timeout)
-    message = await MessageUtils(cls, use_embed_check).reply(content='Do you want to proceed?', view=view)
+    message = await Messenger(cls, use_embed_check).reply(content='Do you want to proceed?', view=view)
     view.message = message
 
     if await view.wait() != False or not view.value:

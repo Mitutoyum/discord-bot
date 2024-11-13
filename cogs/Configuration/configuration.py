@@ -1,11 +1,12 @@
 from .. import Cog
+from typing import Literal
 
 from discord import app_commands, Interaction
 from discord.ext import commands
-from core import config, errors
-from core.utils import helpers, embeds
-from core.utils.helpers import MessageUtils
-from typing import Literal
+
+from core import errors
+from core.utils import helpers, embeds, config_manager
+from core.utils.message import Messenger
 
 class Configuration(Cog, description='A category specifically for bot\'s configuration'):
     
@@ -21,10 +22,10 @@ class Configuration(Cog, description='A category specifically for bot\'s configu
 
 
 
-    for flag, metadata in config.flags.items(): # i know this is cursed
+    for flag, metadata in config_manager.flags.items(): # i know this is cursed
         async def command(self, interaction: Interaction, scope, **kwargs):
             flag_name = interaction.command.name
-            flag = config.flags[flag_name]
+            flag = config_manager.flags[flag_name]
 
             if scope == 'local':
                 if not interaction.guild:
@@ -40,8 +41,8 @@ class Configuration(Cog, description='A category specifically for bot\'s configu
             path = f'servers.{interaction.guild_id}.{flag_name}' if scope == 'local' else f'global.{flag_name}'
             kwargs = kwargs.get('value') or kwargs.get(flag_name) or kwargs
 
-            config.set_flag(path, kwargs)
-            await MessageUtils(interaction).reply(content=f'```Successfully changed {flag_name}```')
+            config_manager.set_flag(path, kwargs)
+            await Messenger(interaction).reply(content=f'```Successfully changed {flag_name}```')
         
         old_code = command.__code__
         params = list(old_code.co_varnames)
@@ -71,16 +72,18 @@ class Configuration(Cog, description='A category specifically for bot\'s configu
     @app_commands.choices(
         flag = [
             app_commands.Choice(name=i, value=i)
-            for i in config.flags
+            for i in config_manager.flags
         ]
     )
     @config_group.command(name='get', description='Get information about a flag')
     async def get_flag(self, interaction: Interaction, flag: app_commands.Choice[str]):
-        metadata = config.flags[flag.name]
+        metadata = config_manager.flags[flag.name]
+
         if (scope := metadata['scope']) == 'hybrid':
             scope = ['global', 'local']
         else:
             scope = list(scope)
+
         embed = embeds.BaseEmbed(interaction.user)
         embed.title = f'Showing flag: `{flag.name}`'
         embed.description = f'```{metadata.get('description')}```'
@@ -91,6 +94,7 @@ class Configuration(Cog, description='A category specifically for bot\'s configu
         embed.add_field(
             name = '> Current values',
             value = '\n'.join([
-                f'`{i}`: {config.get_flag(f'servers.{interaction.guild.id}.{flag.name}' if i == 'local' else f'global.{flag.name}', 'Not set', check_global=False, add_if_not_exist=False)}' for i in scope]), inline=False
+                f'`{i}`: {config_manager.get_flag(f'servers.{interaction.guild.id}.{flag.name}' if i == 'local' else f'global.{flag.name}', 'Not set', check_global=False, add_if_not_exist=False)}' for i in scope]), inline=False
             )
-        await MessageUtils(interaction, use_embed_check=False).reply(embed=embed)
+        
+        await Messenger(interaction, use_embed_check=False).reply(embed=embed)

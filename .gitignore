@@ -1,8 +1,5 @@
 __pycache__/
-
+resources/*
 
 .*
 *.log
-*.pyc
-*.json
-*.db

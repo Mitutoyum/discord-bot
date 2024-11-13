@@ -1,21 +1,23 @@
 import discord
 
 from .. import Cog
+from .modlog import ModLog
+from .automod import AutoMod
 from datetime import datetime
-
 from typing import Optional
 from logging import getLogger
+
 from discord import Interaction, app_commands, Member, User
 from discord.ext import tasks
-from core.utils.helpers import MessageUtils
-from core.utils import transformers
+
+from core.utils.message import Messenger
+from core.utils.transformers import DurationTransformer
 
 
 
 logger = getLogger(__name__)
 
-
-class Moderation(Cog):
+class Moderation(Cog, ModLog, AutoMod, description='A category used for moderating purposes'):
 
     async def cog_load(self):
         await super().cog_load()
@@ -26,13 +28,13 @@ class Moderation(Cog):
         user = 'The user to ban',
         delete_messages = 'Wether to delete their messages or not',
         duration = 'Duration for the ban, none will be permanent',
-        reason = 'The reason for banning, if any'
+        reason = 'The reason for the ban, if any'
     )
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.guild_only()
-    @app_commands.command(description='Ban user')
-    async def ban(self, interaction: Interaction, user: Member | User, delete_messages: Optional[bool] = False, duration: transformers.DurationConverter | None = None, reason: Optional[str] = None):
-        message_utils = MessageUtils(interaction)
+    @app_commands.command(description='Ban member')
+    async def ban(self, interaction: Interaction, user: Member | User, delete_messages: Optional[bool] = False, duration: DurationTransformer | None = None, reason: Optional[str] = None):
+        message_utils = Messenger(interaction)
         guild = interaction.guild
         try:
             await guild.fetch_ban(user)
@@ -56,13 +58,13 @@ class Moderation(Cog):
 
     @app_commands.describe(
         user = 'The user to unban',
-        reason = 'The reason for unbanning, if any'
+        reason = 'The reason for the unban, if any'
     )
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.guild_only()
     @app_commands.command(description='Unban user')
     async def unban(self, interaction: Interaction, user: User, reason: Optional[str] = None) -> None:
-        message_utils = MessageUtils(interaction)
+        message_utils = Messenger(interaction)
         await interaction.guild.unban(user, reason=reason)
         async with self.bot.connection_pool.acquire() as db:
             async with db.execute('SELECT EXISTS(SELECT * FROM temp_bans WHERE userid=? AND guild_id=?)', (user.id, interaction.guild_id)) as cursor:
@@ -73,28 +75,33 @@ class Moderation(Cog):
 
         await message_utils.reply(content=f'**{user.mention} has been unbanned**\n>>> Moderator: {interaction.user.mention}\nReason: {reason or 'No reason provided'}')
 
-    
     @app_commands.describe(
-        user = 'The user to kick',
-        reason = 'The reason for kicking, if any'
+        member = 'The member to kick',
+        reason = 'The reason for the kick, if any'
     )
     @app_commands.checks.has_permissions(kick_members=True)
     @app_commands.guild_only()
-    @app_commands.command(description='Kick user')
-    async def kick(self, interaction: Interaction, user: Member, reason: Optional[str] = None) -> None:
-        await user.kick(reason=reason)
-        await MessageUtils(interaction).reply(content=f'**{user.mention} has been kicked**\n>>> Moderator: {interaction.user.mention}\nReason: {reason or 'No reason provided'}')
+    @app_commands.command(description='Kick member')
+    async def kick(self, interaction: Interaction, member: Member, reason: Optional[str] = None) -> None:
+        await member.kick(reason=reason)
+        await Messenger(interaction).reply(f'**{member.mention} has been kicked**\n>>> Moderator: {interaction.user.mention}\nReason: {reason or 'No reason provided'}')
     
+
+    @app_commands.describe(
+        member = 'The member to mute',
+        duration = 'Duration for the mute, none will be permanent',
+        reason = 'The reason for the mute, if any'
+    )
     @app_commands.checks.has_permissions(mute_members=True)
     @app_commands.guild_only()
     @app_commands.command(description='Mute member')
-    async def mute(self, interaction: Interaction, member: Member, duration: Optional[transformers.DurationConverter] = None, reason: Optional[str] = None):
+    async def mute(self, interaction: Interaction, member: Member, duration: Optional[DurationTransformer] = None, reason: Optional[str] = None):
         muted_role = discord.utils.get(interaction.guild.roles, name='Muted')
         if not muted_role:
-            return await MessageUtils(interaction).reply(content=f'The server does not have `Muted` role, run {await self.bot.tree.get_mention('setup-muted-role')} to create one')
+            return await Messenger(interaction).reply(f'The server does not have `Muted` role, run {await self.bot.tree.get_mention('setup-muted-role')} to create one')
 
         if discord.utils.get(member.roles, id=muted_role.id):
-            return await MessageUtils(interaction).reply(content=f'{member.mention} was already muted')
+            return await Messenger(interaction).reply(f'{member.mention} was already muted')
 
         await member.add_roles(muted_role, reason=reason)
 
@@ -106,15 +113,19 @@ class Moderation(Cog):
             duration = discord.utils.format_dt(duration, style='R')
         else:
             duration = '`Permanent`'
-        await MessageUtils(interaction).reply(f'**{member.mention} has been muted**\n>>> Moderator: {interaction.user.mention}\nDuration: {duration}\nReason: {reason or 'No reason provided'}')
+        await Messenger(interaction).reply(f'**{member.mention} has been muted**\n>>> Moderator: {interaction.user.mention}\nDuration: {duration}\nReason: {reason or 'No reason provided'}')
 
+    @app_commands.describe(
+        member = 'The member to unmute',
+        reason = 'The reason for the unmute, if any'
+    )
     @app_commands.checks.has_permissions(mute_members=True)
     @app_commands.guild_only()
     @app_commands.command(description='Unmute member')
     async def unmute(self, interaction: Interaction, member: Member, reason: Optional[str] = None):
         muted_role = discord.utils.get(interaction.guild.roles, name='Muted')
         if not discord.utils.get(member.roles, id=muted_role.id):
-            return await MessageUtils(interaction).reply(f'{member.mention} is not muted')
+            return await Messenger(interaction).reply(f'{member.mention} is not muted')
         
         await member.remove_roles(muted_role, reason=reason)
 
@@ -125,19 +136,21 @@ class Moderation(Cog):
                     await connection.execute('DELETE FROM temp_mutes WHERE userid=? AND guild_id=?', (member.id, interaction.guild_id))
                     await connection.commit()
 
-        await MessageUtils(interaction).reply(f'**{member.mention} has been unmuted**\n>>> Moderator: {interaction.user.mention}\nReason: {reason or 'No reason provided'}')
+        await Messenger(interaction).reply(f'**{member.mention} has been unmuted**\n>>> Moderator: {interaction.user.mention}\nReason: {reason or 'No reason provided'}')
         
-
-
-
-        
-
+    @app_commands.describe(
+        member = 'The member to timeout',
+        until = 'The amount of time the member should be timed out for',
+        reason = 'The reason for the timeout, if any'
+    )
     @app_commands.checks.has_permissions(moderate_members=True)
     @app_commands.guild_only()
-    @app_commands.command(description='Timeout member')
-    async def timeout(self, interaction, member: Member):
-        pass
-    
+    @app_commands.command(description=f'Timeout member, if you wan\'t a permanent mute consider using mute command instead')
+    async def timeout(self, interaction: Interaction, member: Member, until: DurationTransformer, reason: Optional[str] = None):
+        await member.timeout(until, reason=reason)
+        await Messenger(interaction).reply(f'**{member.mention} has been timeout**\n>>> Moderator: {interaction.user.mention}\nUntil: {discord.utils.format_dt(datetime.now() + until, 'R')}\nReason: {reason or 'No reason provided'}')
+
+
     @app_commands.checks.has_permissions(manage_roles=True, manage_channels=True)
     @app_commands.guild_only()
     @app_commands.command(name='setup-muted-role', description='Setup a Muted role for the server')
@@ -154,7 +167,7 @@ class Moderation(Cog):
             overwrite.add_reactions = False
             await channel.set_permissions(muted_role, overwrite=overwrite, reason='Muted role setup')
 
-        await MessageUtils(interaction).reply(content=f'**{muted_role} has been created**\n>>> Author: {interaction.user.mention}')
+        await Messenger(interaction).reply(content=f'**{muted_role} has been created**\n>>> Author: {interaction.user.mention}')
             
 
 
