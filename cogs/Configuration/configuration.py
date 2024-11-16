@@ -3,19 +3,30 @@ from typing import Literal, Optional
 
 
 import discord
+from discord.ext import commands
 from discord import app_commands, Interaction
 
+from core import errors
 from core.utils.cog import Cog
-from core.utils import config_manager
+from core.utils import config_manager, helpers
 from core.utils.message import Messenger
 
 
-def transform(scope: Literal['local', 'global'] = 'hybrid', auto_respond: bool = True):
+def transform(scope: Literal['local', 'global'] = 'hybrid', *, permission_check: bool = True, auto_respond: bool = True):
     def decorator(cls: app_commands.Command):
         old_callback = cls._callback
         async def callback(self, interaction: Interaction, **kwargs):
             scope = kwargs['scope']
             kwargs.pop('scope')
+
+            if scope == 'local':
+                if not interaction.guild:
+                    raise errors.GuildOnly('Local scope can only be used in guilds')
+                if not helpers.is_server_owner(interaction):
+                    raise errors.NotServerOwner('You are not permitted to use this command')
+            else:
+                if not self.bot.is_owner(interaction.user):
+                    raise commands.NotOwner('You are not permitted to use this command')
 
             old_kwargs = kwargs.copy()
 
@@ -30,8 +41,6 @@ def transform(scope: Literal['local', 'global'] = 'hybrid', auto_respond: bool =
                 if len(old_kwargs) == 1 else
                 old_kwargs
             )
-            print(old_kwargs)
-            print(kwargs)
             await old_callback(self, interaction, **kwargs)
             if auto_respond:
                 await Messenger(interaction).reply(f'`{old_callback.__name__}` has been changed')
