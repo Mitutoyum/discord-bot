@@ -24,6 +24,9 @@ logging.root.addHandler(handler)
 logger = logging.getLogger(__name__)
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 
+config.init()
+database.init()
+
 @app.command()
 def setup():
     suffix = '\n>'
@@ -47,8 +50,8 @@ def setup():
 
 @app.command()
 def run():
-    config.init()
-    database.init()
+    # config.init()
+    # database.init()
 
     if status := config_manager.get_flag('global.status'):
         status = discord.Status[status]

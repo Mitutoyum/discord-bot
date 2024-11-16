@@ -1,4 +1,3 @@
-from .. import Cog
 from typing import Optional
 
 from discord import Member, Role, AllowedMentions
@@ -7,6 +6,7 @@ from discord import app_commands
 from discord import Interaction
 
 from core.utils.message import Messenger
+from core.utils.cog import Cog
 
 class Manager(Cog):
 

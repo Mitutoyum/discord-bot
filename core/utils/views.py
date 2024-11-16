@@ -4,11 +4,8 @@ from discord.ext import commands
 from discord import ButtonStyle, app_commands
 from typing import Optional
 
-from . import helpers, embeds, config_manager
+from . import embeds, config_manager
 from discord import ui
-
-a = []
-
 
 class BaseView(ui.View):
     message: discord.Message
@@ -37,7 +34,7 @@ class ConfirmPrompt(BaseView):
 class HelpCategorySelect(ui.Select):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(
-            placeholder='Select a category',
+            placeholder='Category Menu',
             options=[
                 discord.SelectOption(
                     label=name,
@@ -51,14 +48,15 @@ class HelpCategorySelect(ui.Select):
     async def callback(self, interaction: discord.Interaction) -> None:
         cog = self.bot.get_cog(self.values[0])
         embed = embeds.BaseEmbed(
-            interaction.user
+            interaction.user,
+            interaction.guild_id
         )
         embed.title = f'Showing category: `{cog.qualified_name}`'
-        embed.description = f'Total commands: {len(cog.get_app_commands()) + len(cog.get_commands())}\n'
+        embed.description = f'```{cog.description or 'No description'}```'
 
         for command in cog.walk_commands():
             if isinstance(command, commands.Group): continue
-            prefix = config_manager.get_flag(f'servers.{interaction.guild_id}.prefix')
+            prefix = config_manager.get_flag(f'guild.{interaction.guild_id}.prefix')
             description = command.description or command.help
             
             
@@ -72,5 +70,4 @@ class HelpCategorySelect(ui.Select):
                 value=command.description,
                 inline=False
             )
-        print(embed)
         await interaction.response.edit_message(embed=embed)

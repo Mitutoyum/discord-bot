@@ -28,7 +28,7 @@ async def error_handler(cls: Context | Interaction, exception: commands.CommandE
     
 
     
-async def get_prefix(bot: commands.Bot, message: discord.Message) -> str | abc.Iterable[str]:
+async def get_prefix(bot: commands.Bot, message: Message) -> str | abc.Iterable[str]:
     mention_prefix = config_manager.get_flag('global.mention_prefix' if not message.guild else f'servers.{message.guild.id}.mention_prefix', False)
     prefix = config_manager.get_flag('global.prefix' if not message.guild else f'servers.{message.guild.id}.prefix')
     return commands.when_mentioned_or(prefix)(bot, message) if mention_prefix and prefix else prefix or commands.when_mentioned(bot, message)

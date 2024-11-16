@@ -1,6 +1,4 @@
-import discord
 from typing import Optional
-
 
 from discord.ext.commands import Context
 from discord import Interaction, Message, TextChannel
@@ -15,7 +13,7 @@ class Messenger():
         self.use_embed = False
 
         if use_embed_check:
-            path = f'servers.{cls.guild.id}.use_embed' if cls.guild else 'global.use_embed'
+            path = f'guild.{cls.guild.id}.use_embed' if cls.guild else 'global.use_embed'
             self.use_embed = config_manager.get_flag(path, self.use_embed)
 
     async def reply(self, *args, **kwargs) -> Message  | None:
@@ -30,18 +28,17 @@ class Messenger():
         author = getattr(cls, 'user', None) or cls.author
         send_func = getattr(cls, 'reply', None) or cls.response.send_message
 
-        if embed := kwargs.get('embed'):
-            del kwargs['embed']
-            kwargs['embeds'] = list(embed)
-
         if self.use_embed and content:
-            embed = embeds.BaseEmbed(author, description=content)
+            embed = embeds.BaseEmbed(author, cls.guild.id, description=content)
             kwargs.pop('content', None)
 
-            if kwargs.get('embeds'):
+            if kwargs.get('embed'):
+                kwargs['embeds'] = [embed, kwargs['embed']]
+            elif kwargs.get('embeds'):
                 kwargs['embeds'].append(embed)
             else:
                 kwargs['embed'] = embed
+
 
             return await send_func(**kwargs)
 
@@ -60,7 +57,6 @@ class ChannelMessenger:
         self.use_embed_check = False
 
         if use_embed_check:
-            # path = f'guild.{channel.guild.id}.use_embed'
             path = f'guild.{channel.guild.id}.use_embed'
             self.use_embed = config_manager.get_flag(path, self.use_embed_check)
         

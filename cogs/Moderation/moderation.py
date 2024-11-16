@@ -1,6 +1,5 @@
 import discord
 
-from .. import Cog
 from .modlog import ModLog
 from .automod import AutoMod
 from datetime import datetime
@@ -11,9 +10,8 @@ from discord import Interaction, app_commands, Member, User
 from discord.ext import tasks
 
 from core.utils.message import Messenger
+from core.utils.cog import Cog
 from core.utils.transformers import DurationTransformer
-
-
 
 logger = getLogger(__name__)
 

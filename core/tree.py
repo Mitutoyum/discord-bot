@@ -22,7 +22,7 @@ class Tree(CommandTree):
             command = self.get_command(command)
         if not command:
             return None
-        
+
         app_command = discord.utils.get(await self.fetch_commands(guild=guild), name=(command.root_parent or command).name)
         if not app_command:
             return None

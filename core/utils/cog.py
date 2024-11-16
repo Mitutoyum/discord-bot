@@ -11,14 +11,7 @@ __all__ = [
     'Cog',
     'GroupCog',
     'CogMixin',
-    'GroupCogMixin'
 ]
-
-class Meta(commands.CogMeta, ABCMeta):
-    pass
-
-class Mixin(metaclass=ABCMeta):
-    pass
 
 class Cog(commands.Cog):
     def __init__(self, bot: Bot) -> None:
@@ -31,5 +24,7 @@ class GroupCog(commands.GroupCog):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
-class CogMixin(Mixin, Cog, metaclass=Meta):
-    pass
+class CogMixin:
+    
+    def __init__(self, bot: Bot):
+        self.bot = bot

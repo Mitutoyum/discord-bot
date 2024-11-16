@@ -25,5 +25,5 @@ class Bot(commands.Bot):
         logger.info('Bot is ready')
 
     async def on_command_error(self, ctx: commands.Context, exception: commands.CommandError):
-        # if not await error_handler(ctx, exception):
-        await super().on_command_error(ctx, exception)
+        if not await error_handler(ctx, exception):
+            await super().on_command_error(ctx, exception)

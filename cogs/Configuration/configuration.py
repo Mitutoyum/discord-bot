@@ -1,100 +1,119 @@
-from .. import Cog
-from typing import Literal
+import inspect
+from typing import Literal, Optional
 
+
+import discord
 from discord import app_commands, Interaction
-from discord.ext import commands
 
-from core import errors
-from core.utils import helpers, embeds, config_manager
+from core.utils.cog import Cog
+from core.utils import config_manager
 from core.utils.message import Messenger
 
-class Configuration(Cog, description='A category specifically for bot\'s configuration'):
-    
-    config_group = app_commands.Group(
-        name = 'config',
-        description='A group with loads of command to modify the bot\'s behavior'
-    )
-    set_flag = app_commands.Group(
-        name = 'set',
-        description = 'A subgroup contains all of the flags that you can set' # todo
-    )
-    config_group.add_command(set_flag)
 
+def transform(scope: Literal['local', 'global'] = 'hybrid', auto_respond: bool = True):
+    def decorator(cls: app_commands.Command):
+        old_callback = cls._callback
+        async def callback(self, interaction: Interaction, **kwargs):
+            scope = kwargs['scope']
+            kwargs.pop('scope')
 
+            old_kwargs = kwargs.copy()
 
-    for flag, metadata in config_manager.flags.items(): # i know this is cursed
-        async def command(self, interaction: Interaction, scope, **kwargs):
-            flag_name = interaction.command.name
-            flag = config_manager.flags[flag_name]
+            for k, v in old_kwargs.items():
+                if type(v) == app_commands.Choice:
+                    old_kwargs[k] = v.value
 
-            if scope == 'local':
-                if not interaction.guild:
-                    raise errors.GuildOnly('Local scope can only be used in guilds')
-                if not helpers.is_server_owner(interaction):
-                    raise errors.NotServerOwner
-            elif scope == 'global' and not await self.bot.is_owner(interaction.user):
-                raise commands.NotOwner
-            
-            if flag.get('callback'):
-                await flag['callback'](interaction, **kwargs)
-
-            path = f'servers.{interaction.guild_id}.{flag_name}' if scope == 'local' else f'global.{flag_name}'
-            kwargs = kwargs.get('value') or kwargs.get(flag_name) or kwargs
-
-            config_manager.set_flag(path, kwargs)
-            await Messenger(interaction).reply(content=f'```Successfully changed {flag_name}```')
-        
-        old_code = command.__code__
-        params = list(old_code.co_varnames)
-        params.remove('kwargs')
-        argcount = len(params[:command.__code__.co_argcount])
-        if isinstance(metadata['value'], dict):
-            for k, v in metadata['value'].items():
-                params.insert(argcount, k)
-                command.__annotations__[k] = v['annotation']
-                if v.get('default'):
-                    command.__defaults__ = (command.__defaults__ or ()) + (v['default'],)
-                if v.get('description'):
-                    app_commands.describe(**{k: v['description']})(command)
-                argcount += 1
-        else:
-            params.insert(argcount, 'value')
-            command.__annotations__['value'] = type(metadata['value'])
-            command.__defaults__ = (command.__defaults__ or ()) + (metadata['value'],)
-            argcount += 1
-
-        command.__code__ = command.__code__.replace(co_name=flag, co_argcount=argcount, co_flags=131, co_varnames=tuple(params), co_nlocals=len(params))
-        command.__annotations__['scope'] = Literal['global', 'local'] if metadata.get('scope') == 'hybrid' else Literal[metadata.get('scope')]
-        set_flag.command(name=flag, description=metadata['description'])(command)
-        command.__code__ = old_code
-
-    
-    @app_commands.choices(
-        flag = [
-            app_commands.Choice(name=i, value=i)
-            for i in config_manager.flags
-        ]
-    )
-    @config_group.command(name='get', description='Get information about a flag')
-    async def get_flag(self, interaction: Interaction, flag: app_commands.Choice[str]):
-        metadata = config_manager.flags[flag.name]
-
-        if (scope := metadata['scope']) == 'hybrid':
-            scope = ['global', 'local']
-        else:
-            scope = list(scope)
-
-        embed = embeds.BaseEmbed(interaction.user)
-        embed.title = f'Showing flag: `{flag.name}`'
-        embed.description = f'```{metadata.get('description')}```'
-        embed.add_field(
-            name = '> Allowed scopes',
-            value = f'{' '.join([f'`{i}`'for i in scope])}'
-        )
-        embed.add_field(
-            name = '> Current values',
-            value = '\n'.join([
-                f'`{i}`: {config_manager.get_flag(f'servers.{interaction.guild.id}.{flag.name}' if i == 'local' else f'global.{flag.name}', 'Not set', check_global=False, add_if_not_exist=False)}' for i in scope]), inline=False
+            path = f'global.{cls.name}' if scope == 'global' else f'guild.{interaction.guild_id}.{cls.name}'
+            config_manager.set_flag(
+                path,
+                list(old_kwargs.values())[0]
+                if len(old_kwargs) == 1 else
+                old_kwargs
             )
+            print(old_kwargs)
+            print(kwargs)
+            await old_callback(self, interaction, **kwargs)
+            if auto_respond:
+                await Messenger(interaction).reply(f'`{old_callback.__name__}` has been changed')
+
+        annotation = Literal['global', 'local'] if scope == 'hybrid' else Literal[scope]
+        cls._params = {
+            'scope': app_commands.transformers.annotation_to_parameter(annotation, inspect.Parameter(
+                'scope',
+                inspect._ParameterKind.POSITIONAL_OR_KEYWORD,
+                annotation=annotation
+            ))
+        } | cls._params
+        cls._callback = callback
+
+        return cls
+    return decorator
+
+class Configuration(Cog):
+        config_group = app_commands.Group(
+            name = 'config',
+            description='A group with loads of command to modify the bot\'s behavior'
+        )
+        set_flag = app_commands.Group(
+            name = 'set',
+            description = 'A subgroup contains all of the flags that you can set'
+        )
+        config_group.add_command(set_flag)
+
+        @transform()
+        @set_flag.command()
+        async def use_embed(self, interaction: Interaction, value: bool) -> None:
+            pass
+
+        @transform()
+        @set_flag.command()
+        async def mention_prefix(self, interaction: Interaction, value: bool) -> None:
+            pass
         
-        await Messenger(interaction, use_embed_check=False).reply(embed=embed)
+        @transform()
+        @set_flag.command()
+        async def color(self, interaction: Interaction, value: int) -> None:
+            pass
+        
+        @transform('global')
+        @app_commands.choices(
+            type = [
+                app_commands.Choice(name=activity_type.name, value=activity_type.name)
+                # print(type(activity_type.name))
+                for activity_type in discord.ActivityType
+            ]
+        )
+        @set_flag.command()
+        async def activity(
+            self,
+            interaction: Interaction,
+            application_id: Optional[int],
+            name: Optional[str],
+            url: Optional[str],
+            type: app_commands.Choice[str],
+            state: Optional[str],
+            details: Optional[str],
+            platform: Optional[str]
+        ) -> None:
+            activity = discord.Activity(
+                application_id = application_id,
+                name = name,
+                url = url,
+                type = discord.ActivityType[type.value],
+                state = state,
+                details = details,
+                platform = platform
+            )
+            await self.bot.change_presence(activity=activity)
+
+        @transform('global')
+        @app_commands.choices(
+            value = [
+                app_commands.Choice(name=status.name, value=status.value)
+                for status in discord.Status
+            ]
+        )
+        @set_flag.command()
+        async def status(self, interaction: Interaction, value: app_commands.Choice[str]):
+            status = discord.Status[value.value]
+            await self.bot.change_presence(status=status)

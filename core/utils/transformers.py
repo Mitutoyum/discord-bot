@@ -10,7 +10,7 @@ class DurationTransformer(Transformer):
             'h': 3600, # hour
             'd': 86400, # day
             'w': 604800, # week
-            'm': 2628000 # month
+            'y': 31536000 # year
         }
         try:
             amount = int(value[:-1])

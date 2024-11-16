@@ -41,8 +41,6 @@ class ModLog(CogMixin):
     async def log(self, interaction: Interaction, event: str) -> None:
         pass #todo
 
-
-
     @Cog.listener()
     async def on_guild_channel_create(self, channel: GuildChannel) -> None:
         guild = channel.guild
@@ -69,6 +67,6 @@ class ModLog(CogMixin):
 
         await ChannelMessenger(modlog_channel).send(f'**Modlog: `{channel.name}` was deleted**\n>>> Category: {channel.category}\nBy: {by.mention}\nAt: {at}')
 
-    @Cog.listener()
-    async def on_guild_channel_update(self, before, after) -> None:
-        pass # todo
+    # @Cog.listener()
+    # async def on_guild_channel_update(self, before, after) -> None:
+    #     pass # todo
