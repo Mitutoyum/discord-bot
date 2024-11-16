@@ -14,6 +14,8 @@ python main.py setup
 python main.py run
 ```
 
+This bot mostly use slash commands so make sure to sync your commands through `<prefix>sync`
+
 <details>
   <summary><h3>Dependencies</h3></summary>
 
