@@ -27,6 +27,7 @@ class Messenger():
 
         author = getattr(cls, 'user', None) or cls.author
         send_func = getattr(cls, 'reply', None) or cls.response.send_message
+        
 
         if self.use_embed and content:
             embed = embeds.BaseEmbed(author, cls.guild.id, description=content)
@@ -38,7 +39,6 @@ class Messenger():
                 kwargs['embeds'].append(embed)
             else:
                 kwargs['embed'] = embed
-
 
             return await send_func(**kwargs)
 
@@ -62,17 +62,30 @@ class ChannelMessenger:
         
     async def send(self, *args, **kwargs):
         channel = self.channel
+        content = None
+        pure_content = None
 
         if args:
             content = args[0]
+            try:
+                pure_content = args[1]
+            except IndexError:
+                pass
         else:
             content = kwargs.get('content')
+            pure_content = kwargs.get('pure_content')
+        
 
         if self.use_embed and content:
-            embed = embeds.BaseEmbed(description=content)
-            kwargs.pop('content', None)
+            embed = embeds.BaseEmbed(guild_id=channel.guild.id, description=content)
+            if pure_content:
+                kwargs['content'] = pure_content
+            else:
+                kwargs.pop('content', None)
 
-            if kwargs.get('embeds'):
+            if kwargs.get('embed'):
+                kwargs['embeds'] = [embed, kwargs['embed']]
+            elif kwargs.get('embeds'):
                 kwargs['embeds'].append(embed)
             else:
                 kwargs['embed'] = embed

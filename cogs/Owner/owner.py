@@ -12,6 +12,7 @@ class Owner(Cog, description='Owner-only category'):
     @commands.command(description='Synchonizes slash commands')
     async def sync(self, ctx: Context, guild_id: Optional[int] = commands.parameter(default=None, description='The id of the guild to sync, none will be global')) -> None:
         synced_commands = await self.bot.tree.sync(guild=self.bot.get_guild(guild_id))
+        self.bot.tree.fetched_commands = await self.bot.tree.fetch_commands()
         await Messenger(ctx).reply(f'Synchonized `{len(synced_commands)}` command(s)')
     
     @commands.is_owner()

@@ -62,7 +62,7 @@ class Information(Cog):
 
     @app_commands.command(name='is-online', description='A simple command to check if the bot is online')
     async def is_online(self, interaction: Interaction):
-        await Messenger(f'Bot is online')
+        await Messenger(interaction).reply('Bot is online')
     
     @app_commands.command(description='Show the bot\'s latency')
     async def ping(self, interaction: Interaction):

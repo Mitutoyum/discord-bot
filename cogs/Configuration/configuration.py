@@ -25,7 +25,7 @@ def transform(scope: Literal['local', 'global'] = 'hybrid', *, permission_check:
                 if not helpers.is_server_owner(interaction):
                     raise errors.NotServerOwner('You are not permitted to use this command')
             else:
-                if not self.bot.is_owner(interaction.user):
+                if not await self.bot.is_owner(interaction.user):
                     raise commands.NotOwner('You are not permitted to use this command')
 
             old_kwargs = kwargs.copy()
@@ -88,7 +88,6 @@ class Configuration(Cog):
         @app_commands.choices(
             type = [
                 app_commands.Choice(name=activity_type.name, value=activity_type.name)
-                # print(type(activity_type.name))
                 for activity_type in discord.ActivityType
             ]
         )

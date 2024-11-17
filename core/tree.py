@@ -1,5 +1,7 @@
 import discord
 
+from typing import List
+
 from .utils.helpers import error_handler
 from discord import Interaction
 from discord.ext import commands
@@ -12,6 +14,7 @@ from .bot import Bot
 
 class Tree(CommandTree):
     bot: Bot = None
+    fetched_commands: List[app_commands.AppCommand] = None
 
     async def on_error(self, interaction: Interaction, error: AppCommandError):
         if not await error_handler(interaction, error):
@@ -20,10 +23,14 @@ class Tree(CommandTree):
     async def get_mention(self, command: str | commands.HybridCommand | app_commands.Command | commands.Command, *, guild: discord.abc.Snowflake | None = None) -> str | None:
         if isinstance(command, str):
             command = self.get_command(command)
-        if not command:
-            return None
+            if not command:
+                return None
+            
 
-        app_command = discord.utils.get(await self.fetch_commands(guild=guild), name=(command.root_parent or command).name)
+        self.fetched_commands = self.fetched_commands or await self.fetch_commands(guild=guild) # for faster processing
+
+
+        app_command = discord.utils.get(self.fetched_commands, name=(command.root_parent or command).name)
         if not app_command:
             return None
         return app_command.mention
@@ -35,4 +42,4 @@ class Tree(CommandTree):
         for cog in self.bot.cogs.values():
             if discord.utils.get(cog.get_app_commands(), qualified_name=command):
                 return cog
-        return None
+        return None()

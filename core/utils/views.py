@@ -46,6 +46,7 @@ class HelpCategorySelect(ui.Select):
         self.bot: commands.Bot = bot
     
     async def callback(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer()
         cog = self.bot.get_cog(self.values[0])
         embed = embeds.BaseEmbed(
             interaction.user,
@@ -67,7 +68,7 @@ class HelpCategorySelect(ui.Select):
                 continue
             embed.add_field(
                 name=f'> {await self.bot.tree.get_mention(command.name)}',
-                value=command.description,
+                value=command.description or '',
                 inline=False
             )
-        await interaction.response.edit_message(embed=embed)
+        await interaction.followup.edit_message(interaction.message.id, embed=embed)

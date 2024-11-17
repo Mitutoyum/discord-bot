@@ -11,4 +11,4 @@ class Utilities(Cog):
 
     @commands.command()
     async def test(self, ctx: Context):
-        config_manager.delete_flag('global.prefix')
+        await Messenger(ctx).reply('Hello world')

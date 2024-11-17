@@ -19,7 +19,7 @@ class BaseEmbed(Embed):
         description = None,
         timestamp = None
     ):
-        color = config_manager.get_flag(f'guild.{guild_id}.color' if guild_id else 'global.color', check_global=False)
+        color = config_manager.get_flag(f'guild.{guild_id}.color' if guild_id else 'global.color')
         timestamp = datetime.now()
         super().__init__(colour=colour, color=color, title=title, type=type, url=url, description=description, timestamp=timestamp)
 

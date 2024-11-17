@@ -1,4 +1,3 @@
-import discord
 import logging
 
 from discord.ext import commands
@@ -7,7 +6,7 @@ from core.utils.helpers import error_handler
 
 logger = logging.getLogger(__name__)
 
-class Bot(commands.Bot):
+class Bot(commands.AutoShardedBot):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

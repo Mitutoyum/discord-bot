@@ -3,17 +3,18 @@ import discord
 from typing import Optional
 from datetime import datetime
 
-from discord import app_commands, Interaction, TextChannel
+from discord import app_commands, Interaction, TextChannel, Role, Guild, Member, User
 from discord.abc import GuildChannel
 
 from core.utils.message import ChannelMessenger, Messenger
+from core.bot import Bot
 from core.utils.cog import CogMixin, Cog
 from core.utils import config_manager
 
 def is_enabled(guild_id: str | int) -> bool:
     return config_manager.get_flag(f'guild.{guild_id}.modlog.is_enabled', False, check_global=False)
 
-def get_modlog_channel(bot, guild_id: int | str) -> TextChannel:
+def get_modlog_channel(bot: Bot, guild_id: int | str) -> TextChannel | None:
     channel_id = config_manager.get_flag(f'guild.{guild_id}.modlog.channel', check_global=False)
     return bot.get_channel(channel_id)
 
@@ -31,7 +32,7 @@ class ModLog(CogMixin):
         config_manager.set_flag(f'guild.{interaction.guild_id}.modlog.is_enabled', False)
         await Messenger(interaction).reply('Modlog is now disabled')
 
-    @modlog.command(name='set-channel', description='Set the channel for logging')
+    @modlog.command(name='set-channel', description='Set modlog channel')
     async def set_channel(self, interaction: Interaction, channel: Optional[TextChannel] = None):
         channel = channel or interaction.channel
         config_manager.set_flag(f'guild.{interaction.guild_id}.modlog.channel', channel.id)
@@ -67,6 +68,42 @@ class ModLog(CogMixin):
 
         await ChannelMessenger(modlog_channel).send(f'**Modlog: `{channel.name}` was deleted**\n>>> Category: {channel.category}\nBy: {by.mention}\nAt: {at}')
 
+    @Cog.listener()
+    async def on_guild_channel_update(self, before: GuildChannel, after: GuildChannel) -> None:
+        pass
+
+    @Cog.listener()
+    async def on_guild_role_create(self, role: Role) -> None:
+        pass
+
+    @Cog.listener()
+    async def on_guild_role_delete(self, role: Role) -> None:
+        pass
+
+    @Cog.listener()
+    async def on_guild_role_update(self, before: Role, after: Role) -> None:
+        pass
+
+    @Cog.listener()
+    async def on_guild_update(self, before: Guild, after: Guild) -> None:
+        pass
+
+    @Cog.listener()
+    async def on_member_ban(self, guild: Guild, member: Member) -> None:
+        pass
+
+    @Cog.listener()
+    async def on_member_unban(self, guild: Guild, user: User) -> None:
+        pass
+
     # @Cog.listener()
-    # async def on_guild_channel_update(self, before, after) -> None:
-    #     pass # todo
+    # async def on_member_join(self, member: Member) -> None:
+    #     pass
+
+    # @Cog.listener()
+    # async def on_member_remove(self, member: Member) -> None:
+    #     pass
+
+    @Cog.listener()
+    async def on_member_update(self, before: Member, after: Member) -> None:
+        pass
