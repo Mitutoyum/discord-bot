@@ -112,7 +112,9 @@ class Configuration(Cog):
                 details = details,
                 platform = platform
             )
-            await self.bot.change_presence(activity=activity)
+            status = self.bot.status
+            await self.bot.change_presence(status=status, activity=activity)
+            self.bot.activity = activity
 
         @transform('global')
         @app_commands.choices(
@@ -124,4 +126,6 @@ class Configuration(Cog):
         @set_flag.command()
         async def status(self, interaction: Interaction, value: app_commands.Choice[str]):
             status = discord.Status[value.value]
-            await self.bot.change_presence(status=status)
+            acitivity = self.bot.activity
+            await self.bot.change_presence(status=status, activity=acitivity)
+            self.bot.status = status

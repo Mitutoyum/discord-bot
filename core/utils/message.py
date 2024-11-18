@@ -51,6 +51,41 @@ class Messenger():
             return await message.edit(embed=embed, **kwargs)
         return await message.edit(**kwargs)
     
+    async def followup_send(self, *args, **kwargs) -> Message | None:
+        cls = self.cls
+
+        assert isinstance(cls, Interaction)
+
+        if not cls.response.is_done():
+            await cls.response.defer()
+
+        content = None
+
+        if args:
+            content = args[0]
+        else:
+            content = kwargs.get('content')
+
+        author = getattr(cls, 'user', None) or cls.author
+        
+
+        if self.use_embed and content:
+            embed = embeds.BaseEmbed(author, cls.guild.id, description=content)
+            kwargs.pop('content', None)
+
+            if kwargs.get('embed'):
+                kwargs['embeds'] = [embed, kwargs['embed']]
+            elif kwargs.get('embeds'):
+                kwargs['embeds'].append(embed)
+            else:
+                kwargs['embed'] = embed
+
+            return await cls.followup.send(**kwargs)
+
+        return await cls.followup.send(*args, **kwargs)
+        
+
+    
 class ChannelMessenger:
     def __init__(self, channel: TextChannel, use_embed_check: bool = True):
         self.channel = channel
@@ -93,4 +128,3 @@ class ChannelMessenger:
             return await channel.send(**kwargs)
 
         return await channel.send(*args, **kwargs)
-

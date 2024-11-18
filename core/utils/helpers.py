@@ -18,11 +18,15 @@ from .message import Messenger
 logger = getLogger(__name__)
 
 async def error_handler(cls: Context | Interaction, exception: commands.CommandError | app_commands.AppCommandError | errors.BotException | Exception) -> bool:
+    messenger = Messenger(cls)
     if isinstance(exception, (commands.CommandInvokeError, app_commands.CommandInvokeError)):
         exception = exception.__cause__
 
     if exception.args:
-        await Messenger(cls).reply(content=exception.args[0])
+        if isinstance(cls, Interaction) and cls.response.is_done():
+            await messenger.followup_send(exception.args[0])
+        else:
+            await messenger.reply(content=exception.args[0])
         return True
     return False
     
