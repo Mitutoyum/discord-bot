@@ -9,11 +9,11 @@ from discord.app_commands import CommandTree
 from discord.app_commands import AppCommandError
 
 from discord import app_commands
-from .bot import Bot
+from discord.ext.commands import AutoShardedBot
 
 
 class Tree(CommandTree):
-    bot: Bot = None
+    bot: AutoShardedBot = None
     fetched_commands: List[app_commands.AppCommand] = None
 
     async def on_error(self, interaction: Interaction, error: AppCommandError):

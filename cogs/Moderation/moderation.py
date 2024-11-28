@@ -32,7 +32,7 @@ class Moderation(Cog, ModLog, AutoMod, description='A category used for moderati
     @app_commands.guild_only()
     @app_commands.command(description='Ban member')
     async def ban(self, interaction: Interaction, user: Member | User, delete_messages: Optional[bool] = False, duration: DurationTransformer | None = None, reason: Optional[str] = None):
-        message_utils = Messenger(interaction)
+        messenger = Messenger(interaction)
         guild = interaction.guild
         try:
             await guild.fetch_ban(user)
@@ -50,9 +50,16 @@ class Moderation(Cog, ModLog, AutoMod, description='A category used for moderati
                     duration = discord.utils.format_dt(duration, 'R')
             else:
                 duration = '`Permanent`'
-            await message_utils.reply(content=f'**{user.mention} has been banned**\n>>> Moderator: {interaction.user.mention}\nDuration: {duration}\nReason: {reason or 'No reason provided'}')
+            await messenger.reply(
+                f'''
+                **{user.mention} has been banned**
+                >>> Moderator: {interaction.user.mention}
+                Duration: {duration}
+                Reason: {reason or 'No reason provided'}
+                '''
+            )
         else:
-            await message_utils.reply(content=f'{user.mention} was already banned')
+            await messenger.reply(f'{user.mention} was already banned')
 
     @app_commands.describe(
         user = 'The user to unban',
@@ -62,7 +69,6 @@ class Moderation(Cog, ModLog, AutoMod, description='A category used for moderati
     @app_commands.guild_only()
     @app_commands.command(description='Unban user')
     async def unban(self, interaction: Interaction, user: User, reason: Optional[str] = None) -> None:
-        message_utils = Messenger(interaction)
         await interaction.guild.unban(user, reason=reason)
         async with self.bot.connection_pool.acquire() as db:
             async with db.execute('SELECT EXISTS(SELECT * FROM temp_bans WHERE userid=? AND guild_id=?)', (user.id, interaction.guild_id)) as cursor:
@@ -71,7 +77,13 @@ class Moderation(Cog, ModLog, AutoMod, description='A category used for moderati
                     await db.execute('DELETE FROM temp_bans WHERE userid=? AND guild_id=?', (user.id, interaction.guild_id))
                     await db.commit()
 
-        await message_utils.reply(content=f'**{user.mention} has been unbanned**\n>>> Moderator: {interaction.user.mention}\nReason: {reason or 'No reason provided'}')
+        await Messenger(interaction).reply(
+            f'''
+            **{user.mention} has been unbanned**
+            >>> Moderator: {interaction.user.mention}
+            Reason: {reason or 'No reason provided'}'
+            '''
+        )
 
     @app_commands.describe(
         member = 'The member to kick',
@@ -82,7 +94,13 @@ class Moderation(Cog, ModLog, AutoMod, description='A category used for moderati
     @app_commands.command(description='Kick member')
     async def kick(self, interaction: Interaction, member: Member, reason: Optional[str] = None) -> None:
         await member.kick(reason=reason)
-        await Messenger(interaction).reply(f'**{member.mention} has been kicked**\n>>> Moderator: {interaction.user.mention}\nReason: {reason or 'No reason provided'}')
+        await Messenger(interaction).reply(
+            f'''
+            **{member.mention} has been kicked**
+            >>> Moderator: {interaction.user.mention}
+            Reason: {reason or 'No reason provided'}
+            '''
+        )
     
 
     @app_commands.describe(
@@ -111,7 +129,14 @@ class Moderation(Cog, ModLog, AutoMod, description='A category used for moderati
             duration = discord.utils.format_dt(duration, style='R')
         else:
             duration = '`Permanent`'
-        await Messenger(interaction).reply(f'**{member.mention} has been muted**\n>>> Moderator: {interaction.user.mention}\nDuration: {duration}\nReason: {reason or 'No reason provided'}')
+        await Messenger(interaction).reply(
+            f'''
+            **{member.mention} has been muted**
+            >>> Moderator: {interaction.user.mention}
+            Duration: {duration}
+            Reason: {reason or 'No reason provided'}
+            '''
+        )
 
     @app_commands.describe(
         member = 'The member to unmute',
@@ -134,7 +159,13 @@ class Moderation(Cog, ModLog, AutoMod, description='A category used for moderati
                     await connection.execute('DELETE FROM temp_mutes WHERE userid=? AND guild_id=?', (member.id, interaction.guild_id))
                     await connection.commit()
 
-        await Messenger(interaction).reply(f'**{member.mention} has been unmuted**\n>>> Moderator: {interaction.user.mention}\nReason: {reason or 'No reason provided'}')
+        await Messenger(interaction).reply(
+            f'''
+            **{member.mention} has been unmuted**
+            >>> Moderator: {interaction.user.mention}
+            Reason: {reason or 'No reason provided'}
+            '''
+        )
         
     @app_commands.describe(
         member = 'The member to timeout',
@@ -146,7 +177,14 @@ class Moderation(Cog, ModLog, AutoMod, description='A category used for moderati
     @app_commands.command(description=f'Timeout member, if you wan\'t a permanent mute consider using mute command instead')
     async def timeout(self, interaction: Interaction, member: Member, until: DurationTransformer, reason: Optional[str] = None):
         await member.timeout(until, reason=reason)
-        await Messenger(interaction).reply(f'**{member.mention} has been timeout**\n>>> Moderator: {interaction.user.mention}\nUntil: {discord.utils.format_dt(datetime.now() + until, 'R')}\nReason: {reason or 'No reason provided'}')
+        await Messenger(interaction).reply(
+            f'''
+            **{member.mention} has been timeout**
+            >>> Moderator: {interaction.user.mention}
+            Until: {discord.utils.format_dt(datetime.now() + until, 'R')}
+            Reason: {reason or 'No reason provided'}
+            '''
+        )
 
 
     @app_commands.checks.has_permissions(manage_roles=True, manage_channels=True)
@@ -165,7 +203,12 @@ class Moderation(Cog, ModLog, AutoMod, description='A category used for moderati
             overwrite.add_reactions = False
             await channel.set_permissions(muted_role, overwrite=overwrite, reason='Muted role setup')
 
-        await Messenger(interaction).reply(content=f'**{muted_role} has been created**\n>>> Author: {interaction.user.mention}')
+        await Messenger(interaction).reply(
+            f'''
+            **{muted_role} has been created**
+            >>> Author: {interaction.user.mention}
+            '''
+        )
             
 
 

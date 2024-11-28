@@ -6,7 +6,7 @@ from discord.ext.commands import Context
 from core.utils.message import Messenger
 from core.utils.cog import Cog
 
-class Owner(Cog, description='Owner-only category'):
+class Core(Cog, description='A category for core-functions, owner-only'):
 
     @commands.is_owner()
     @commands.command(description='Synchonizes slash commands')
@@ -25,7 +25,9 @@ class Owner(Cog, description='Owner-only category'):
     @commands.is_owner()
     @commands.command(description='Load cog')
     async def load(self, ctx: Context, cog: str):
+        cog = cog.lower()
         messenger = Messenger(ctx)
+
         try:
             await self.bot.load_extension(f'cogs.{cog}')
             await messenger.reply(content=f'`{cog}` has been loaded')
@@ -38,7 +40,11 @@ class Owner(Cog, description='Owner-only category'):
     @commands.is_owner()
     @commands.command(description='Unload cog')
     async def unload(self, ctx: Context, cog: str):
+        cog = cog.lower()
         messenger = Messenger(ctx)
+        if cog == 'core':
+            return await messenger.reply('You can\'t unload `core` cog')
+
         try:
             await self.bot.unload_extension(f'cogs.{cog}')
             await messenger.reply(f'`{cog}` has been unloaded')

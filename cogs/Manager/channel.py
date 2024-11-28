@@ -70,7 +70,7 @@ class Channel(CogMixin):
             overwrite.connect = False
 
             if channel.type == ChannelType.forum:
-                overwrite.create_thread = None
+                overwrite.create_threads = None
 
 
             await channel.set_permissions(role, overwrite=overwrite, reason=reason)
@@ -99,7 +99,7 @@ class Channel(CogMixin):
             overwrite.send_messages = None
 
             if channel.type == ChannelType.forum:
-                overwrite.create_thread = None
+                overwrite.create_threads = None
             
             await channel.set_permissions(role, overwrite=overwrite, reason=reason)
 
@@ -115,17 +115,15 @@ class Channel(CogMixin):
 
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.guild_only()
-    @channel.command()
-    async def spam_post(self, interaction: Interaction, channel: ForumChannel, amount: int, reason: Optional[str] = None) -> None:
-        await interaction.response.defer()
-
-        for _ in range(amount):
-            await channel.create_thread(name='...', content='...', reason=reason)
-        
-        await Messenger(interaction).followup_send(
+    @channel.command(description='Delete channel')
+    async def delete(self, interaction: Interaction, channel: GuildChannel, reason: Optional[str] = None) -> None:
+        await channel.delete()
+        await Messenger(interaction).reply(
             f'''
-            **Spammed total `{amount}` of post on {channel.mention}**
+            **{channel.mention} has been deleted**
             >>> Manager: {interaction.user.mention}
             Reason: `{reason or 'No reason provided'}`
             '''
         )
+    
+    

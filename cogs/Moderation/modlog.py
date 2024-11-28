@@ -45,7 +45,7 @@ class ModLog(CogMixin):
     @Cog.listener()
     async def on_guild_channel_create(self, channel: GuildChannel) -> None:
         guild = channel.guild
-        modlog_channel = get_modlog_channel(guild.id)
+        modlog_channel = get_modlog_channel(self.bot, guild.id)
 
         if not is_enabled(guild.id) or not modlog_channel:
             return

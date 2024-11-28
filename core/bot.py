@@ -4,9 +4,12 @@ from discord.ext import commands
 from core import config, database
 from core.utils.helpers import error_handler
 
+from .tree import Tree
+
 logger = logging.getLogger(__name__)
 
 class Bot(commands.AutoShardedBot):
+    tree: Tree
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
