@@ -1,4 +1,3 @@
-import typer
 import discord
 
 from core.bot import Bot
@@ -9,10 +8,9 @@ from core.utils import config_manager
 from core.utils.helpers import get_prefix
 
 import logging
-import asyncio
-
+from asyncio import run
+from sys import exit
 from os import getenv
-from typing import Annotated
 
 handler = logging.FileHandler('discord.log', 'w', 'utf-8')
 handler.setFormatter(logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', '%Y-%m-%d %H:%M:%S', '{'))
@@ -22,37 +20,14 @@ logging.root.addHandler(handler)
 
 
 logger = logging.getLogger(__name__)
-app = typer.Typer(no_args_is_help=True, add_completion=False)
 
-config.init()
-database.init()
+async def main():
+    config.init()
+    database.init()
 
-@app.command()
-def setup():
-    suffix = '\n>'
-    prefix = typer.prompt(
-        text = '\nWhat prefix do you want to use?',
-        type = str,
-        prompt_suffix = suffix
-    )
-    bot_token = typer.prompt(
-        text = '\nEnter the token of your bot application (input will be hidden)',
-        type = str,
-        hide_input = True,
-        prompt_suffix = suffix
-    )
-    config_manager.set_flag('global.prefix', prefix)
-
-    with open('.env', 'w', encoding='utf-8') as file:
-        file.write(f'BOT_TOKEN={bot_token}')
-
-    typer.secho('Setup completed, you can now run the bot', fg=typer.colors.GREEN)
-
-@app.command()
-def run():
-    # config.init()
-    # database.init()
-
+    if not config_manager.get_flag('global.prefix', add_if_not_exist=False):
+        exit('Missing prefix, please set one in resources/config.json')
+    
     if status := config_manager.get_flag('global.status'):
         status = discord.Status[status]
 
@@ -70,21 +45,11 @@ def run():
         status=status
     )
 
-    logger.info('Starting bot.')
     load_dotenv()
 
-    bot.run(getenv('BOT_TOKEN'), log_handler=None)
-    asyncio.run(bot.connection_pool.close())
+    await bot.start(getenv('BOT_TOKEN'))
 
-
-
-@app.command()
-def set_token(token: Annotated[str, typer.Argument()]):
-    with open('.env', 'w', encoding='utf-8') as file:
-        file.write(f'BOT_TOKEN={token}')
-    typer.secho('Token has been changed', fg=typer.colors.GREEN)
-
-        
-
+    await bot.connection_pool.close()
+    
 if __name__ == '__main__':
-    app()
+    run(main())
