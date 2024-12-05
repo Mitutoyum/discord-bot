@@ -1,18 +1,17 @@
 # A simple open source discord bot written in discord.py
 
 ### Installation
-- Install dependencies
+- Clone the repository
+```
+git clone https://github.com/Mitutoyum/discord-bot.git
+```
+- Install dependencies (use a venv if you like)
 ```
 pip install -r requirements.txt
 ```
-- Bot setup
-```
-python main.py setup
-```
-- Run the bot
-```
-python main.py run
-```
+
+### Setup
+- Just run `python setup.py` and it will does it for you
 
 This bot mostly use slash commands so make sure to sync your commands through `<prefix>sync`
 
@@ -21,7 +20,6 @@ This bot mostly use slash commands so make sure to sync your commands through `<
 
 - `discord.py`
 - `aiosqlite`
-- `typer`
 - `python-dotenv`
 </details>
 
