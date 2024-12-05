@@ -1,10 +1,7 @@
-import discord
 import json
-
 from typing import Literal, Any, Callable, Literal
 from inspect import signature
 
-from discord import Interaction, app_commands
 from core.config import config_path
 
 def get_config() -> dict:
