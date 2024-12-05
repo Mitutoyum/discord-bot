@@ -11,7 +11,7 @@ pip install -r requirements.txt
 ```
 
 ### Setup
-- Just run `python setup.py` and it will does it for you
+- Just run `python setup.py` and it will do it for you
 
 This bot mostly use slash commands so make sure to sync your commands through `<prefix>sync`
 
