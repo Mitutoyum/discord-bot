@@ -47,9 +47,10 @@ async def main():
 
     load_dotenv()
 
-    await bot.start(getenv('BOT_TOKEN'))
+    try:
+        await bot.start(getenv('BOT_TOKEN'))
+    except KeyboardInterrupt:
+        await bot.close()
 
-    await bot.connection_pool.close()
-    
 if __name__ == '__main__':
     run(main())

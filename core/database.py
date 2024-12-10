@@ -1,5 +1,7 @@
 import aiosqlite
 import sqlite3
+import logging
+
 
 from . import config
 from asyncio import Queue
@@ -11,6 +13,7 @@ tables = {
     'temp_mutes': '(userid INTEGER, guild_id INTEGER, release_date TEXT)',
     'warns': '(userid INTEGER, guild_id INTEGER, reason TEXT)'
 }
+logger = logging.getLogger(__name__)
 
 
 class ConnectionPool:

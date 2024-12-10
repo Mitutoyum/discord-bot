@@ -43,7 +43,7 @@ class Core(Cog, description='A category for core-functions, owner-only'):
         cog = cog.lower()
         messenger = Messenger(ctx)
         if cog == 'core':
-            return await messenger.reply('You can\'t unload `core` cog')
+            return await messenger.reply('`core` is unloadable')
 
         try:
             await self.bot.unload_extension(f'cogs.{cog}')

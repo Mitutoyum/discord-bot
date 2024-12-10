@@ -28,8 +28,7 @@ class Raid(Cog, description='Raiding utilities'):
     # @app_commands.guild_only()
     # @app_commands.command(name='spam-auditlog', description='Spam audit logs')
     # async def spam_auditlog(self, interaction: Interaction, amount: int) -> None:
-    #     # 
-    #     channels = interaction.guild_id.
+        # pass
 
     @app_commands.choices(
         channel_type = [
