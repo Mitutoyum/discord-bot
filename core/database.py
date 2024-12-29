@@ -9,18 +9,17 @@ from aiosqlite import Connection
 from typing import Optional, Self
 
 tables = {
-    'temp_bans': '(userid INTEGER, guild_id INTEGER, release_date TEXT)',
-    'temp_mutes': '(userid INTEGER, guild_id INTEGER, release_date TEXT)',
-    'warns': '(userid INTEGER, guild_id INTEGER, reason TEXT)'
+    "temp_bans": "(userid INTEGER, guild_id INTEGER, release_date TEXT)",
+    "temp_mutes": "(userid INTEGER, guild_id INTEGER, release_date TEXT)",
+    "warns": "(userid INTEGER, guild_id INTEGER, reason TEXT)",
 }
 logger = logging.getLogger(__name__)
 
 
 class ConnectionPool:
-
-    def __init__(self, maxsize: Optional[int] = 0):
+    def __init__(self, maxsize: int = 0):
         self.pool = Queue(maxsize)
-    
+
     async def _acquire(self) -> Connection:
         if self.pool.empty():
             connection = await aiosqlite.connect(config.database_path)
@@ -31,7 +30,7 @@ class ConnectionPool:
 
     def acquire(self):
         return AcquireContextManager(self)
-    
+
     async def release(self, connection: Connection):
         await self.pool.put(connection)
 
@@ -45,8 +44,8 @@ class ConnectionPool:
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await self.close()
 
+
 class AcquireContextManager:
-    
     def __init__(self, pool: ConnectionPool) -> None:
         self.pool = pool
         self.connection = None
@@ -54,10 +53,10 @@ class AcquireContextManager:
     async def __aenter__(self) -> Connection:
         self.connection = await self.pool._acquire()
         return self.connection
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await self.pool.release(self.connection)
-    
+
     def __await__(self) -> Connection:
         self.connection = self.pool._acquire().__await__()
         return self.connection
@@ -69,6 +68,6 @@ def init():
     with db:
         cursor = db.cursor()
         for table, column in tables.items():
-            cursor.execute(f'CREATE TABLE IF NOT EXISTS {table + column}')
+            cursor.execute(f"CREATE TABLE IF NOT EXISTS {table + column}")
 
     db.close()
