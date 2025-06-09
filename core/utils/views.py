@@ -1,12 +1,12 @@
-import discord
-
-from discord.ext import commands
-from discord import ButtonStyle, app_commands, ui
 from typing import Optional
 
+import discord
+from discord import ButtonStyle, app_commands, ui
+from discord.ext import commands
 from discord.ext.commands import Bot
 
-from . import embeds, config_manager
+from . import config_manager, embeds
+
 # from core.bot import Bot
 
 
@@ -58,9 +58,9 @@ class HelpCategorySelect(ui.Select):
     async def callback(self, interaction: discord.Interaction) -> None:
         await interaction.response.defer()
         cog = self.bot.get_cog(self.values[0])
-        embed = embeds.BaseEmbed(interaction.user, interaction.guild_id)
+        embed = embeds.BaseEmbed(interaction.guild_id)
         embed.title = f"Showing category: `{cog.qualified_name}`"
-        embed.description = f'```{cog.description or 'No description'}```'
+        embed.description = f"```{cog.description or 'No description'}```"
 
         for command in cog.walk_commands():
             if isinstance(command, commands.Group):

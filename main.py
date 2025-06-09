@@ -1,18 +1,18 @@
-import discord
+import logging
+from asyncio import run
+from os import getenv
+from sys import exit
 
+import discord
+from dotenv import load_dotenv
+
+from core import config, database
 from core.bot import Bot
 from core.tree import Tree
-from dotenv import load_dotenv
-from core import database, config
 from core.utils import config_manager
 from core.utils.helpers import get_prefix
 
-import logging
-from asyncio import run
-from sys import exit
-from os import getenv
-
-handler = logging.FileHandler("discord.log", "w", "utf-8")
+handler = logging.FileHandler("discord.log", "a", "utf-8")
 handler.setFormatter(
     logging.Formatter(
         "[{asctime}] [{levelname:<8}] {name}: {message}", "%Y-%m-%d %H:%M:%S", "{"
@@ -33,6 +33,7 @@ async def main():
     if not config_manager.get_flag("global.prefix", add_if_not_exist=False):
         exit("Missing prefix, please set one in resources/config.json")
 
+    # check for custom status/activity
     if status := config_manager.get_flag("global.status"):
         status = discord.Status[status]  # type: ignore
 

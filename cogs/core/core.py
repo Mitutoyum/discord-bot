@@ -3,8 +3,8 @@ from typing import Optional
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from core.utils.message import Messenger
 from core.utils.cog import Cog
+from core.utils.message import Messenger
 
 
 class Core(Cog, description="A category for core-functions, owner-only"):
@@ -22,13 +22,13 @@ class Core(Cog, description="A category for core-functions, owner-only"):
         await Messenger(ctx).reply(f"Synchonized `{len(synced_commands)}` command(s)")
 
     @commands.is_owner()
-    @commands.command(description="Unsynchonizes slash commands")
+    @commands.command(description="Desynchonizes slash commands")
     async def desync(
         self,
         ctx: Context,
         guild_id: Optional[int] = commands.parameter(
             default=None,
-            description="The id of the guild to unsync, none will be global",
+            description="The id of the guild to desync, none will be global",
         ),
     ):
         self.bot.tree.clear_commands(guild=self.bot.get_guild(guild_id))  # type: ignore

@@ -1,11 +1,11 @@
-# A simple open source discord bot written in discord.py
+# A discord bot written in discord.py that focuses on customization
 
 ### Installation
 - Clone the repository
 ```
 git clone https://github.com/Mitutoyum/discord-bot.git
 ```
-- Install dependencies (use a venv if you like)
+- Install dependencies (optionally, you can use a virtual environment)
 ```
 pip install -r requirements.txt
 ```
